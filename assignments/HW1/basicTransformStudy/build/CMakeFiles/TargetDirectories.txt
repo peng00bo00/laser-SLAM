@@ -1,3 +1,0 @@
-/home/pengbo/laser-SLAM/assignments/HW1/basicTransformStudy/build/CMakeFiles/rebuild_cache.dir
-/home/pengbo/laser-SLAM/assignments/HW1/basicTransformStudy/build/CMakeFiles/basicTransformStudy.dir
-/home/pengbo/laser-SLAM/assignments/HW1/basicTransformStudy/build/CMakeFiles/edit_cache.dir
