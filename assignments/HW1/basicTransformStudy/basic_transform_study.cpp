@@ -26,7 +26,13 @@ int main(int argc, char** argv)
     // TODO 参照第一课PPT
     // start your code here (5~10 lines)
     Eigen::Matrix3d TOA;
-    
+
+    TOA << cos(A(2)), -sin(A(2)), A(0),
+           sin(A(2)),  cos(A(2)), A(1),
+              0,          0,        1;
+
+    Eigen::Matrix3d TAB = TBO * TOA;
+    BA << TAB(0, 2), TAB(1, 2), acos(TAB(0, 0));
     // end your code here
 
     cout << "The right answer is BA: 2 1 1.5708" << endl;
