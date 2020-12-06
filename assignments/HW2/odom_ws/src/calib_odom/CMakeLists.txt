@@ -123,7 +123,7 @@ include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${CSM_INCLUDE_DIR}
-  /opt/ros/kinetic/include/csm
+  /opt/ros/melodic/include/csm
 )
 
 ## Declare a C++ library
@@ -147,7 +147,7 @@ add_dependencies(calib_odom_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 ## Specify libraries to link a library or executable target against
  target_link_libraries(calib_odom_node
    ${catkin_LIBRARIES}
-   /opt/ros/kinetic/lib/libcsm.so
+   /opt/ros/melodic/lib/libcsm.so
  )
 
 #############

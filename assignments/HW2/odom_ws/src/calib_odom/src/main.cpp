@@ -47,6 +47,9 @@ OdomCalib Odom_calib;
 std::vector<geometry_msgs::PointStamped> mcu_path;
 
 Eigen::Vector3d  cal_delta_distence(Eigen::Vector3d odom_pose);
+
+Eigen::Vector3d T2pose(const Eigen::Matrix3d T);
+Eigen::Matrix3d pose2T(const Eigen::Vector3d pose);
 /*
  * 获取激光数据类
 */
@@ -356,6 +359,14 @@ Eigen::Vector3d  cal_delta_distence(Eigen::Vector3d odom_pose)
     now_pos = odom_pose;
 
     //TODO:
+    Eigen::Matrix3d T_last, T_now, dT;
+
+    T_last = pose2T(last_pos);
+    T_now  = pose2T(now_pos);
+    dT = T_last.inverse() * T_now;
+
+    d_pos = T2pose(dT);
+
     //end of TODO:
 
     return d_pos;
@@ -510,6 +521,22 @@ Eigen::Vector3d  Scan2::PIICPBetweenTwoFrames(LDP& currentLDPScan,
     m_prevLDP = currentLDPScan;
 
     return rPose;
+}
+
+Eigen::Vector3d T2pose(const Eigen::Matrix3d T) {
+    Eigen::Vector3d pose;
+    pose << T(0, 2), T(1, 2), atan2(T(1, 0), T(0, 0));
+
+    return pose;
+}
+
+Eigen::Matrix3d pose2T(const Eigen::Vector3d pose) {
+    Eigen::Matrix3d T;
+    T << cos(pose(2)),-sin(pose(2)), pose(0),
+         sin(pose(2)), cos(pose(2)), pose(1),
+                    0,            0,       1;
+
+    return T;
 }
 
 
