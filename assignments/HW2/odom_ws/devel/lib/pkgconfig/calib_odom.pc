@@ -1,8 +1,0 @@
-prefix=/home/pengbo/laser-SLAM/assignments/HW2/odom_ws/devel
-
-Name: calib_odom
-Description: Description of calib_odom
-Version: 0.0.0
-Cflags: -I/home/pengbo/laser-SLAM/assignments/HW2/odom_ws/src/calib_odom/include
-Libs: -L${prefix}/lib -lcsm -lcalib_odom
-Requires: roscpp std_msgs
