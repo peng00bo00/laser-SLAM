@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/pengbo/laser-SLAM/assignments/HW2/odom_ws/devel/setup.sh
