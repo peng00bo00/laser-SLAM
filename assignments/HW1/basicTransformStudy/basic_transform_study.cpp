@@ -32,7 +32,7 @@ int main(int argc, char** argv)
               0,          0,        1;
 
     Eigen::Matrix3d TAB = TBO * TOA;
-    BA << TAB(0, 2), TAB(1, 2), acos(TAB(0, 0));
+    BA << TAB(0, 2), TAB(1, 2), atan2(TAB(1, 0), TAB(0, 0));
     // end your code here
 
     cout << "The right answer is BA: 2 1 1.5708" << endl;
