@@ -3,3 +3,4 @@ build/
 devel/
 
 *.bag
+*.catkin_workspace

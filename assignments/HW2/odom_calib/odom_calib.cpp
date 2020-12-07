@@ -149,10 +149,10 @@ int main(int argc, char** argv)
             last_rt = s_t;
             // 填充C, S矩阵
             //TODO: (4~5 lines)
-            C(2*id_s) = cx;
+            C(2*id_s)   = cx;
             C(2*id_s+1) = cy;
 
-            S(2*id_s) = s_x;
+            S(2*id_s)   = s_x;
             S(2*id_s+1) = s_y;
             //end of TODO
             cx = 0;
