@@ -130,7 +130,7 @@ public:
         }
 
         //进行显示
-         g_PointCloudView.showCloud(visual_cloud_.makeShared());
+        g_PointCloudView.showCloud(visual_cloud_.makeShared());
     }
 
 
@@ -204,8 +204,44 @@ public:
             int startIndex,
             int& beam_number)
     {
-       //TODO
-       //end of TODO
+        //TODO
+        tf::Pose Twb = frame_base_pose.inverse();
+        tf::Pose Ti  = Twb * frame_start_pose;
+        tf::Pose Tj  = Twb * frame_end_pose;
+
+        tf::Vector3 ti = Ti.getOrigin();
+        tf::Vector3 tj = Tj.getOrigin();
+
+        tf::Quaternion Ri = Ti.getRotation();
+        tf::Quaternion Rj = Tj.getRotation();
+
+        for (size_t i = 0; i < beam_number; i++)
+        {
+            // interpolation under base frame
+            tf::Vector3 t    = ti.lerp(tj, 1.0/(beam_number-1) * i);
+            tf::Quaternion R = Ri.slerp(Rj, 1.0/(beam_number-1) * i);
+
+            // laser point in current frame
+            double px = ranges[startIndex+i] * cos(angles[startIndex+i]);
+            double py = ranges[startIndex+i] * sin(angles[startIndex+i]);
+
+            tf::Vector3 p(px, py, 0.0);
+
+            // transform to base frame
+            tf::Transform Tt;
+            Tt.setOrigin(t);
+            Tt.setRotation(R);
+
+            // pt: current frame -> base frame
+            tf::Vector3 pt = Tt * p;
+
+            // update ranges and angles
+            ranges[startIndex+i] = sqrt(pt[0] * pt[0] + pt[1] * pt[1]);
+            angles[startIndex+i] = atan2(pt[1], pt[0]);
+
+        }
+        
+        //end of TODO
     }
 
 
