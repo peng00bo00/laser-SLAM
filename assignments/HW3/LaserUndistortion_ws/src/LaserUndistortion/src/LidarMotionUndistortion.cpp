@@ -206,6 +206,7 @@ public:
     {
         //TODO
         tf::Pose Twb = frame_base_pose.inverse();
+        // change to base frame
         tf::Pose Ti  = Twb * frame_start_pose;
         tf::Pose Tj  = Twb * frame_end_pose;
 
@@ -218,8 +219,8 @@ public:
         for (size_t i = 0; i < beam_number; i++)
         {
             // interpolation under base frame
-            tf::Vector3 t    = ti.lerp(tj, 1.0/(beam_number-1) * i);
-            tf::Quaternion R = Ri.slerp(Rj, 1.0/(beam_number-1) * i);
+            tf::Vector3 t    = ti.lerp(tj, 1.0/float(beam_number-1) * i);
+            tf::Quaternion R = Ri.slerp(Rj, 1.0/float(beam_number-1) * i);
 
             // laser point in current frame
             double px = ranges[startIndex+i] * cos(angles[startIndex+i]);
