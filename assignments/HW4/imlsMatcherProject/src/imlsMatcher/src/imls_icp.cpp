@@ -206,7 +206,22 @@ bool IMLSICPMatcher::ImplicitMLSFunction(Eigen::Vector2d x,
 
     //TODO
     //根据函数进行投影．计算height，即ppt中的I(x)
+    double weights = 0.0;
+    height = 0.0;
 
+    for (size_t i = 0; i < nearPoints.size(); i++)
+    {
+        Eigen::Vector2d p = nearPoints[i];
+        Eigen::Vector2d n = nearNormals[i];
+
+        double w = exp(-(x-p).squaredNorm() / (m_h * m_h));
+
+        height += w * (x-p).dot(n);
+        weights += w;
+    }
+
+    height /= weights;
+    
     //end of TODO
 
     return true;
@@ -288,7 +303,7 @@ void IMLSICPMatcher::projSourcePtToSurface(
         Eigen::Vector2d yi;
         //TODO
         //计算yi．
-
+        yi = xi - height * nearNormal;
         //end of TODO
         out_cloud.push_back(yi);
         out_normal.push_back(nearNormal);
@@ -438,7 +453,31 @@ Eigen::Vector2d IMLSICPMatcher::ComputeNormal(std::vector<Eigen::Vector2d> &near
 
     //TODO
     //根据周围的激光点计算法向量，参考ppt中NICP计算法向量的方法
+    int N = nearPoints.size();
 
+    // mu
+    Eigen::Vector2d mu = Eigen::Vector2d::Zero();
+    for (const auto &p: nearPoints) mu += p;
+
+    mu /= N;
+
+    // sigma
+    Eigen::Matrix2d sigma = Eigen::Matrix2d::Zero();
+    for (const auto &p: nearPoints) sigma += (p-mu) * (p-mu).transpose();
+
+    sigma /= N;
+
+    // eigen values
+    Eigen::EigenSolver<Eigen::Matrix2d> es(sigma);
+
+    Eigen::MatrixXd evals = es.eigenvalues().real();
+    Eigen::MatrixXd evecs = es.eigenvectors().real();
+
+    // find the minimal eigen value
+    Eigen::Index evalsMin;
+    evecs.rowwise().sum().minCoeff(&evalsMin);
+
+    normal = evecs.col(evalsMin);
     //end of TODO
 
     return normal;
