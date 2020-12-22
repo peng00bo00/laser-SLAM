@@ -457,14 +457,16 @@ Eigen::Vector2d IMLSICPMatcher::ComputeNormal(std::vector<Eigen::Vector2d> &near
 
     // mu
     Eigen::Vector2d mu = Eigen::Vector2d::Zero();
-    for (const auto &p: nearPoints) mu += p;
-
+    for (const auto &p: nearPoints) {
+        mu += p;
+    }
     mu /= N;
 
     // sigma
     Eigen::Matrix2d sigma = Eigen::Matrix2d::Zero();
-    for (const auto &p: nearPoints) sigma += (p-mu) * (p-mu).transpose();
-
+    for (const auto &p: nearPoints) {
+        sigma += (p-mu) * (p-mu).transpose();
+    }
     sigma /= N;
 
     // eigen values
@@ -474,10 +476,11 @@ Eigen::Vector2d IMLSICPMatcher::ComputeNormal(std::vector<Eigen::Vector2d> &near
     Eigen::MatrixXd evecs = es.eigenvectors().real();
 
     // find the minimal eigen value
-    Eigen::Index evalsMin;
-    evecs.rowwise().sum().minCoeff(&evalsMin);
-
-    normal = evecs.col(evalsMin);
+    if (evals(0, 0) < evals(1, 0)) {
+        normal = evecs.col(0);
+    } else {
+        normal = evecs.col(1);
+    }
     //end of TODO
 
     return normal;
