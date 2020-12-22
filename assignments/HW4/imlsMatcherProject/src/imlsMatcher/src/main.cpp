@@ -130,19 +130,19 @@ public:
             LDP currentLDP;
             ConvertChampionLaserScanToLDP(msg, currentLDP);
 
-            Eigen::Matrix3d rPose, rCovariance;
-            rPose_csm = PIICPBetweenTwoFrames(currentLDP);
+            Eigen::Vector3d d_point_scan = PLICPBetweenTwoFrames(currentLDP, Eigen::Vector3d::Zero());
+            Eigen::Matrix3d lastPose, rPose;
 
-            Eigen::Matrix3d lastPose;
             lastPose << cos(m_prevLaserPose(2)), -sin(m_prevLaserPose(2)), m_prevLaserPose(0),
-                        sin(m_prevLaserPose(2)), cos(m_prevLaserPose(2)), m_prevLaserPose(1),
-                        0, 0, 1;
-            rPose <<    cos(rPose_csm(2)), -sin(rPose_csm(2)), rPose_csm(0),
-                        sin(rPose_csm(2)), cos(rPose_csm(2)), rPose_csm(1),
-                        0, 0, 1;
+                        sin(m_prevLaserPose(2)),  cos(m_prevLaserPose(2)), m_prevLaserPose(1),
+                        0,  0,  1;
+
+            rPose << cos(d_point_scan(2)), -sin(d_point_scan(2)), d_point_scan(0),
+                    sin(d_point_scan(2)),  cos(d_point_scan(2)), d_point_scan(1),
+                    0,  0,  1;
 
             Eigen::Matrix3d nowPose = lastPose * rPose;
-            m_prevLaserPose << nowPose(0, 2), nowPose(1, 2), atan2(nowPose(1, 0), nowPose(0, 0));
+            m_prevLaserPose << nowPose(0, 2) , nowPose(1, 2), atan2(nowPose(1, 0), nowPose(0, 0));
             pubPath(m_prevLaserPose, m_imlsPath, m_imlsPathPub);
         }
     }
@@ -278,14 +278,8 @@ public:
     }
 
     //求两帧之间的icp位姿匹配
-    Eigen::Vector3d PLICPBetweenTwoFrames(LDP& currentLDPScan)
-    {
-        Eigen::Vector3d tmprPose;
-
-        tmprPose[0] = -0.0474715;
-        tmprPose[1] = 0.0464215;
-        tmprPose[2] = 0.0791398 / 180 * M_PI;
-
+    Eigen::Vector3d  PLICPBetweenTwoFrames(LDP& currentLDPScan,
+                                           Eigen::Vector3d tmprPose) {
         prevLDP->odometry[0] = 0.0;
         prevLDP->odometry[1] = 0.0;
         prevLDP->odometry[2] = 0.0;
@@ -310,30 +304,35 @@ public:
         PLICPResult.dx_dy1_m = 0;
         PLICPResult.dx_dy2_m = 0;
 
-        sm_icp(&PLICPParams, &PLICPResult);
+        sm_icp(&PLICPParams,&PLICPResult);
 
         //nowPose在lastPose中的坐标
-        Eigen::Vector3d rPose;
-        if (PLICPResult.valid) {
+        Eigen::Vector3d  rPose;
+        if(PLICPResult.valid)
+        {
             //得到两帧激光之间的相对位姿
-            rPose(0) = (PLICPResult.x[0]);
-            rPose(1) = (PLICPResult.x[1]);
-            rPose(2) = (PLICPResult.x[2]);
+            rPose(0)=(PLICPResult.x[0]);
+            rPose(1)=(PLICPResult.x[1]);
+            rPose(2)=(PLICPResult.x[2]);
 
-            //        std::cout <<"Iter:"<<PLICPResult.iterations<<std::endl;
-            //        std::cout <<"Corr:"<<PLICPResult.nvalid<<std::endl;
-            //        std::cout <<"Erro:"<<PLICPResult.error<<std::endl;
+//        std::cout <<"Iter:"<<PLICPResult.iterations<<std::endl;
+//        std::cout <<"Corr:"<<PLICPResult.nvalid<<std::endl;
+//        std::cout <<"Erro:"<<PLICPResult.error<<std::endl;
 
-            //        std::cout <<"PI ICP GOOD"<<std::endl;
-        } else {
-            std::cout << "PI ICP Failed!!!!!!!" << std::endl;
+//        std::cout <<"PI ICP GOOD"<<std::endl;
+        }
+        else
+        {
+            std::cout <<"PI ICP Failed!!!!!!!"<<std::endl;
             rPose = tmprPose;
         }
 
         //更新
+
         //ld_free(prevLDP);
 
         prevLDP = currentLDPScan;
+
         return rPose;
     }
 
@@ -358,7 +357,6 @@ public:
     LDP prevLDP;
     sm_params PLICPParams;
     sm_result PLICPResult;
-    Eigen::Vector3d rPose_csm;
 };
 
 
