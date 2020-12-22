@@ -131,6 +131,7 @@ public:
             }
             else {
                 ConvertChampionLaserScanToLDP(msg, prevLDP);
+                first_guess = Eigen::Vector3d(0, 0, 0);
             }
             return ;
         }
@@ -166,7 +167,7 @@ public:
             LDP currentLDP;
             ConvertChampionLaserScanToLDP(msg, currentLDP);
 
-            Eigen::Matrix3d rPose = PLICPBetweenTwoFrames(currentLDP, Eigen::Vector3d::Zero());
+            Eigen::Matrix3d rPose = PLICPBetweenTwoFrames(currentLDP, first_guess);
             Eigen::Matrix3d lastPose;
 
             lastPose << cos(m_prevLaserPose(2)), -sin(m_prevLaserPose(2)), m_prevLaserPose(0),
@@ -282,7 +283,7 @@ public:
 
     //求两帧之间的icp位姿匹配
     Eigen::Matrix3d  PLICPBetweenTwoFrames(LDP& currentLDPScan,
-                                           Eigen::Vector3d tmprPose) {
+                                           Eigen::Vector3d guess) {
 
         prevLDP->odometry[0] = 0.0;
         prevLDP->odometry[1] = 0.0;
@@ -300,9 +301,9 @@ public:
         PLICPParams.laser_ref = prevLDP;
         PLICPParams.laser_sens = currentLDPScan;
 
-        PLICPParams.first_guess[0] = tmprPose(0);
-        PLICPParams.first_guess[1] = tmprPose(1);
-        PLICPParams.first_guess[2] = tmprPose(2);
+        PLICPParams.first_guess[0] = guess(0);
+        PLICPParams.first_guess[1] = guess(1);
+        PLICPParams.first_guess[2] = guess(2);
 
         PLICPResult.cov_x_m = 0;
         PLICPResult.dx_dy1_m = 0;
@@ -322,10 +323,11 @@ public:
         else
         {
             std::cout <<"PI ICP Failed!!!!!!!"<<std::endl;
-            rPoseVec = tmprPose;
+            rPoseVec = guess;
         }
 
         prevLDP = currentLDPScan;
+        first_guess = rPoseVec;
 
         // V2T
         Eigen::Matrix3d rPose;
@@ -357,6 +359,8 @@ public:
     LDP prevLDP;
     sm_params PLICPParams;
     sm_result PLICPResult;
+
+    Eigen::Vector3d first_guess;
 };
 
 
