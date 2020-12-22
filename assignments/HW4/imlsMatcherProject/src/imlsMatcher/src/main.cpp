@@ -39,7 +39,9 @@ public:
             use_imls = true;
         }
 
-        if (~use_imls) SetPLICPParams();
+        if (~use_imls) {
+            SetPLICPParams();
+        }
 
         rosbag::Bag bag;
         bag.open(bagfile, rosbag::bagmode::Read);
@@ -95,7 +97,12 @@ public:
             m_isFirstFrame = false;
             m_prevLaserPose = Eigen::Vector3d(0, 0, 0);
             pubPath(m_prevLaserPose, m_imlsPath, m_imlsPathPub);
-            ConvertChampionLaserScanToEigenPointCloud(msg, m_prevPointCloud);
+            if (use_imls) {
+                ConvertChampionLaserScanToEigenPointCloud(msg, m_prevPointCloud);
+            }
+            else {
+                ConvertChampionLaserScanToLDP(msg, prevLDP);
+            }
             return ;
         }
 
@@ -141,6 +148,7 @@ public:
                     sin(d_point_scan(2)),  cos(d_point_scan(2)), d_point_scan(1),
                     0,  0,  1;
 
+            std::cout <<"PL-ICP Match Successful:"<<rPose(0,2)<<","<<rPose(1,2)<<","<<atan2(rPose(1,0),rPose(0,0))*57.295<<std::endl;
             Eigen::Matrix3d nowPose = lastPose * rPose;
             m_prevLaserPose << nowPose(0, 2) , nowPose(1, 2), atan2(nowPose(1, 0), nowPose(0, 0));
             pubPath(m_prevLaserPose, m_imlsPath, m_imlsPathPub);
@@ -280,6 +288,7 @@ public:
     //求两帧之间的icp位姿匹配
     Eigen::Vector3d  PLICPBetweenTwoFrames(LDP& currentLDPScan,
                                            Eigen::Vector3d tmprPose) {
+
         prevLDP->odometry[0] = 0.0;
         prevLDP->odometry[1] = 0.0;
         prevLDP->odometry[2] = 0.0;

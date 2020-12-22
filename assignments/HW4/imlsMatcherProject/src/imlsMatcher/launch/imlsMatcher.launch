@@ -1,4 +1,5 @@
 <launch>
-   <param name="use_imls" value="false"/>
+   <arg name="arg_use_imls" default="false"/>
+   <param name="use_imls" value="$(arg arg_use_imls)"/>
    <node name="imlsMatcher_Node" pkg="imlsMatcher"  type="imlsMatcher_node" output="screen" />
 </launch>
