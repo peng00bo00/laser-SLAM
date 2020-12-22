@@ -89,6 +89,35 @@ public:
         }
     }
 
+    //把激光雷达数据 转换为PL-ICP需要的数据
+    void ConvertChampionLaserScanToLDP(const champion_nav_msgs::ChampionNavLaserScanConstPtr& msg, LDP& ldp)
+    {
+        int N = msg->ranges.size();
+        ldp = ld_alloc_new(N);
+
+        for (int i = 0; i < N; i++) {
+            double d = msg->ranges[i];
+            if (d > msg->range_min && d < msg->range_max) {
+                ldp->valid[i] = 1;
+                ldp->readings[i] = d;
+            } else {
+                ldp->valid[i] = 0;
+                ldp->readings[i] = -1;
+            }
+            ldp->theta[i] = msg->angles[i];
+        }
+        ldp->min_theta = msg->angle_min;
+        ldp->max_theta = msg->angle_max;
+
+        ldp->odometry[0] = 0.0;
+        ldp->odometry[1] = 0.0;
+        ldp->odometry[2] = 0.0;
+
+        ldp->true_pose[0] = 0.0;
+        ldp->true_pose[1] = 0.0;
+        ldp->true_pose[2] = 0.0;
+    }
+
     void championLaserScanCallback(const champion_nav_msgs::ChampionNavLaserScanConstPtr& msg)
     {
         if(m_isFirstFrame == true)
@@ -137,17 +166,13 @@ public:
             LDP currentLDP;
             ConvertChampionLaserScanToLDP(msg, currentLDP);
 
-            Eigen::Vector3d d_point_scan = PLICPBetweenTwoFrames(currentLDP, Eigen::Vector3d::Zero());
-            Eigen::Matrix3d lastPose, rPose;
+            Eigen::Matrix3d rPose = PLICPBetweenTwoFrames(currentLDP, Eigen::Vector3d::Zero());
+            Eigen::Matrix3d lastPose;
 
             lastPose << cos(m_prevLaserPose(2)), -sin(m_prevLaserPose(2)), m_prevLaserPose(0),
                         sin(m_prevLaserPose(2)),  cos(m_prevLaserPose(2)), m_prevLaserPose(1),
                         0,  0,  1;
-
-            rPose << cos(d_point_scan(2)), -sin(d_point_scan(2)), d_point_scan(0),
-                    sin(d_point_scan(2)),  cos(d_point_scan(2)), d_point_scan(1),
-                    0,  0,  1;
-
+            
             std::cout <<"PL-ICP Match Successful:"<<rPose(0,2)<<","<<rPose(1,2)<<","<<atan2(rPose(1,0),rPose(0,0))*57.295<<std::endl;
             Eigen::Matrix3d nowPose = lastPose * rPose;
             m_prevLaserPose << nowPose(0, 2) , nowPose(1, 2), atan2(nowPose(1, 0), nowPose(0, 0));
@@ -255,38 +280,8 @@ public:
         PLICPParams.use_sigma_weights = 0;
     }
 
-    //把激光雷达数据 转换为PL-ICP需要的数据
-    void ConvertChampionLaserScanToLDP(const champion_nav_msgs::ChampionNavLaserScanConstPtr& msg, LDP& ldp)
-    {
-        int nPts = msg->ranges.size();
-        // int nPts = pScan->intensities.size();
-        ldp = ld_alloc_new(nPts);
-
-        for (int i = 0; i < nPts; i++) {
-            double dist = msg->ranges[i];
-            if (dist > msg->range_min && dist < msg->range_max) {
-                ldp->valid[i] = 1;
-                ldp->readings[i] = dist;
-            } else {
-                ldp->valid[i] = 0;
-                ldp->readings[i] = -1;
-            }
-            ldp->theta[i] = msg->angles[i];
-        }
-        ldp->min_theta = msg->angle_min;
-        ldp->max_theta = msg->angle_max;
-
-        ldp->odometry[0] = 0.0;
-        ldp->odometry[1] = 0.0;
-        ldp->odometry[2] = 0.0;
-
-        ldp->true_pose[0] = 0.0;
-        ldp->true_pose[1] = 0.0;
-        ldp->true_pose[2] = 0.0;
-    }
-
     //求两帧之间的icp位姿匹配
-    Eigen::Vector3d  PLICPBetweenTwoFrames(LDP& currentLDPScan,
+    Eigen::Matrix3d  PLICPBetweenTwoFrames(LDP& currentLDPScan,
                                            Eigen::Vector3d tmprPose) {
 
         prevLDP->odometry[0] = 0.0;
@@ -313,34 +308,30 @@ public:
         PLICPResult.dx_dy1_m = 0;
         PLICPResult.dx_dy2_m = 0;
 
-        sm_icp(&PLICPParams,&PLICPResult);
+        sm_icp(&PLICPParams, &PLICPResult);
 
         //nowPose在lastPose中的坐标
-        Eigen::Vector3d  rPose;
+        Eigen::Vector3d  rPoseVec;
         if(PLICPResult.valid)
         {
             //得到两帧激光之间的相对位姿
-            rPose(0)=(PLICPResult.x[0]);
-            rPose(1)=(PLICPResult.x[1]);
-            rPose(2)=(PLICPResult.x[2]);
-
-//        std::cout <<"Iter:"<<PLICPResult.iterations<<std::endl;
-//        std::cout <<"Corr:"<<PLICPResult.nvalid<<std::endl;
-//        std::cout <<"Erro:"<<PLICPResult.error<<std::endl;
-
-//        std::cout <<"PI ICP GOOD"<<std::endl;
+            rPoseVec(0) = PLICPResult.x[0];
+            rPoseVec(1) = PLICPResult.x[1];
+            rPoseVec(2) = PLICPResult.x[2];
         }
         else
         {
             std::cout <<"PI ICP Failed!!!!!!!"<<std::endl;
-            rPose = tmprPose;
+            rPoseVec = tmprPose;
         }
 
-        //更新
-
-        //ld_free(prevLDP);
-
         prevLDP = currentLDPScan;
+
+        // V2T
+        Eigen::Matrix3d rPose;
+        rPose << cos(rPoseVec(2)), -sin(rPoseVec(2)), rPoseVec(0),
+                 sin(rPoseVec(2)),  cos(rPoseVec(2)), rPoseVec(1),
+                 0,  0,  1;
 
         return rPose;
     }
