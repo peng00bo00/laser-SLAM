@@ -206,8 +206,6 @@ bool IMLSICPMatcher::ImplicitMLSFunction(Eigen::Vector2d x,
 
     //TODO
     //根据函数进行投影．计算height，即ppt中的I(x)
-    double weights = 0.0;
-    height = 0.0;
 
     for (size_t i = 0; i < nearPoints.size(); i++)
     {
@@ -216,11 +214,11 @@ bool IMLSICPMatcher::ImplicitMLSFunction(Eigen::Vector2d x,
 
         double w = exp(-(x-p).squaredNorm() / (m_h * m_h));
 
-        height += w * (x-p).dot(n);
-        weights += w;
+        projSum += w * (x-p).dot(n);
+        weightSum += w;
     }
 
-    height /= weights;
+    height = projSum / weightSum;
     
     //end of TODO
 
