@@ -79,7 +79,7 @@ map_t* CreateMapFromLaserPoints(Eigen::Vector3d map_origin_pt,
  * @brief InterpMapValueWithDerivatives
  * 在地图上的进行插值，得到coords处的势场值和对应的关于位置的梯度．
  * 返回值为Eigen::Vector3d ans
- * ans(0)表示市场值
+ * ans(0)表示势场值
  * ans(1:2)表示梯度
  * @param map
  * @param coords
@@ -89,6 +89,33 @@ Eigen::Vector3d InterpMapValueWithDerivatives(map_t* map,Eigen::Vector2d& coords
 {
     Eigen::Vector3d ans;
     //TODO
+    double x = (coords(0) - map->origin_x) / map->resolution + map->size_x / 2;
+    double y = (coords(1) - map->origin_y) / map->resolution + map->size_y / 2;
+
+    int x0 = floor(x);
+    int y0 = floor(y);
+
+    double u = x - x0;
+    double v = y - y0;
+
+    // scores for nearest 4 points
+    double Z1 = map->cells[MAP_INDEX(map, x0, y0)].score;
+    double Z2 = map->cells[MAP_INDEX(map, x0+1, y0)].score;
+    double Z3 = map->cells[MAP_INDEX(map, x0+1, y0+1)].score;
+    double Z4 = map->cells[MAP_INDEX(map, x0, y0+1)].score;
+
+    // bilinear interpolation
+    double l1 = (1-u) * (1-v);
+    double l2 = u * (1-v);
+    double l3 = u * v;
+    double l4 = (1-u) * v;
+
+    // score
+    ans(0) = Z1*l1 + Z2*l2 + Z3*l3 + Z4*l4;
+
+    // gradient
+    ans(1) = (v * (Z3-Z4) + (1-v) * (Z2-Z1)) / map->resolution;
+    ans(2) = (u * (Z3-Z2) + (1-u) * (Z4-Z1)) / map->resolution;
 
     //END OF TODO
 
@@ -112,7 +139,35 @@ void ComputeHessianAndb(map_t* map, Eigen::Vector3d now_pose,
     H = Eigen::Matrix3d::Zero();
     b = Eigen::Vector3d::Zero();
 
-    //TODO
+    //TODO    
+    double x = now_pose(0);
+    double y = now_pose(1);
+    double theta = now_pose(2);
+
+    for (Eigen::Vector2d const &pt: laser_pts) {
+
+
+        // transform to current pose
+        Eigen::Vector2d ST = GN_TransPoint(pt, now_pose);
+
+        // dS
+        Eigen::MatrixXd dS(2, 3);
+
+        dS << 1, 0, -sin(theta) * pt(0) - cos(theta) * pt(1),
+              0, 1,  cos(theta) * pt(0) - sin(theta) * pt(1);
+        
+        // M(S(T))
+        Eigen::Vector3d MST = InterpMapValueWithDerivatives(map, ST);
+
+        double score = MST(0);
+        Eigen::Vector2d dM = MST.tail(2);
+
+        // Jacobian
+        Eigen::MatrixXd J = dM.transpose() * dS;
+
+        H += J.transpose() * J;
+        b += J.transpose() * (1 - score);
+    }
 
     //END OF TODO
 }
@@ -130,10 +185,17 @@ void GaussianNewtonOptimization(map_t*map,Eigen::Vector3d& init_pose,std::vector
     int maxIteration = 20;
     Eigen::Vector3d now_pose = init_pose;
 
+    Eigen::Matrix3d H;
+    Eigen::Vector3d b;
+
     for(int i = 0; i < maxIteration;i++)
     {
         //TODO
+        ComputeHessianAndb(map, now_pose, laser_pts, H, b);
 
+        Eigen::Vector3d dp = H.colPivHouseholderQr().solve(b);
+
+        now_pose += dp;
         //END OF TODO
     }
     init_pose = now_pose;
