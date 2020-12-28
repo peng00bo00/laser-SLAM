@@ -144,11 +144,13 @@ void ComputeHessianAndb(map_t* map, Eigen::Vector3d now_pose,
     double y = now_pose(1);
     double theta = now_pose(2);
 
-    for (Eigen::Vector2d const &pt: laser_pts) {
+    Eigen::Matrix3d T = GN_V2T(now_pose);
+
+    for (Eigen::Vector2d const&pt: laser_pts) {
 
 
         // transform to current pose
-        Eigen::Vector2d ST = GN_TransPoint(pt, now_pose);
+        Eigen::Vector2d ST = GN_TransPoint(pt, T);
 
         // dS
         Eigen::MatrixXd dS(2, 3);
@@ -182,22 +184,27 @@ void ComputeHessianAndb(map_t* map, Eigen::Vector3d now_pose,
  */
 void GaussianNewtonOptimization(map_t*map,Eigen::Vector3d& init_pose,std::vector<Eigen::Vector2d>& laser_pts)
 {
-    int maxIteration = 20;
+    int maxIteration = 1000;
     Eigen::Vector3d now_pose = init_pose;
 
     Eigen::Matrix3d H;
     Eigen::Vector3d b;
+
+    Eigen::Vector3d dp;
 
     for(int i = 0; i < maxIteration;i++)
     {
         //TODO
         ComputeHessianAndb(map, now_pose, laser_pts, H, b);
 
-        Eigen::Vector3d dp = H.colPivHouseholderQr().solve(b);
+        dp = H.colPivHouseholderQr().solve(b);
 
         now_pose += dp;
+        
+        if (dp.norm() < 1e-3) break;
         //END OF TODO
     }
+    std::cout << "Stop iteration with residual:" << dp.norm() << std::endl;
     init_pose = now_pose;
 
 }
