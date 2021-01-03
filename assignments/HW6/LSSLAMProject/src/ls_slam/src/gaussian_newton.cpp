@@ -8,6 +8,7 @@
 #include <eigen3/Eigen/SparseCholesky>
 
 #include <iostream>
+#include <ctime>
 
 
 //位姿-->转换矩阵
@@ -136,6 +137,8 @@ Eigen::VectorXd  LinearizeAndSolve(std::vector<Eigen::Vector3d>& Vertexs,
     H.block(0,0,3,3) += I;
 
     //构造H矩阵　＆ b向量
+    double start, end;
+    start = clock();
     for(int i = 0; i < Edges.size();i++)
     {
         //提取信息
@@ -163,12 +166,15 @@ Eigen::VectorXd  LinearizeAndSolve(std::vector<Eigen::Vector3d>& Vertexs,
         b.block(3*tmpEdge.xj, 0, 3, 1) += Bi.transpose() * infoMatrix * ei;
         //TODO--End
     }
+    end = clock();
+    std::cout << "Time cost for finding Jacobian: " << end - start << " ms" << std::endl;
 
     //求解
     Eigen::VectorXd dx;
 
     //TODO--Start
     // sparse H
+    start = clock();
     Eigen::SparseMatrix<double> Hsp = H.sparseView();
 
     // solver
@@ -176,6 +182,9 @@ Eigen::VectorXd  LinearizeAndSolve(std::vector<Eigen::Vector3d>& Vertexs,
     solver.compute(Hsp);
 
     dx = solver.solve(-b);
+
+    end = clock();
+    std::cout << "Time cost for solving equation: " << end - start << " ms" << std::endl;
 
     //TODO-End
 

@@ -125,7 +125,7 @@ int main(int argc, char **argv)
 
     std::string data;
     if (ros::param::get("data", data)) {
-        std::cout << "Successfully retrieve data" << std::endl;
+        std::cout << "Successfully retrieve data src: " << data << std::endl;
     } else {
         std::cout << "Could not retrieve data, set default to 'test'" << std::endl;
         data = test;
@@ -133,20 +133,20 @@ int main(int argc, char **argv)
 
     std::string VertexPath, EdgePath;
 
-    switch (data)
-    {
-    case intel:
+    if (data.compare(intel) == 0) {
+        std::cout << "Using Intel data set" << std::endl;
         VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-v.dat";
         EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-e.dat";
-        break;
-    case killian:
-        VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/killian-v.dat.dat";
-        EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/killian-e.dat.dat";
-        break;
-    default:
+    }
+    else if (data.compare(killian) == 0) {
+        std::cout << "Using killian data set" << std::endl;
+        VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/killian-v.dat";
+        EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/killian-e.dat";
+    }
+    else {
+        std::cout << "Using test data set" << std::endl;
         VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-v.dat";
         EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-e.dat";
-        break;
     }
 
     // std::string VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-v.dat";
