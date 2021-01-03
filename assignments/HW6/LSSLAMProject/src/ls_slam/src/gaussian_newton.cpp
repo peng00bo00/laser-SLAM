@@ -167,7 +167,7 @@ Eigen::VectorXd  LinearizeAndSolve(std::vector<Eigen::Vector3d>& Vertexs,
         //TODO--End
     }
     end = clock();
-    std::cout << "Time cost for finding Jacobian: " << end - start << " ms" << std::endl;
+    std::cout << "Time cost for finding Jacobian: " << 1000.0 * (end - start) / CLOCKS_PER_SEC << " ms" << std::endl;
 
     //求解
     Eigen::VectorXd dx;
@@ -184,18 +184,10 @@ Eigen::VectorXd  LinearizeAndSolve(std::vector<Eigen::Vector3d>& Vertexs,
     dx = solver.solve(-b);
 
     end = clock();
-    std::cout << "Time cost for solving equation: " << end - start << " ms" << std::endl;
+    std::cout << "Time cost for solving equation: " << 1000.0 * (end - start) / CLOCKS_PER_SEC << " ms" << std::endl;
 
     //TODO-End
 
     return dx;
 }
-
-
-
-
-
-
-
-
 
