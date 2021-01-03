@@ -149,6 +149,10 @@ int main(int argc, char **argv)
 
         //进行更新
         //TODO--Start
+        for (int j = 0; j < Vertexs.size(); j++) {
+            Vertexs[j] += dx.block(3 * j, 0, 3, 1);
+            Vertexs[j](2) = normalAngle(Vertexs[j](2));
+        }
         //TODO--End
 
         double maxError = -1;

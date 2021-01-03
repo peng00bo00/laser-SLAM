@@ -5,6 +5,8 @@
 #include <eigen3/Eigen/Cholesky>
 #include <eigen3/Eigen/LU>
 
+#include<Eigen/SparseCholesky>
+
 #include <iostream>
 
 
@@ -73,6 +75,40 @@ void CalcJacobianAndError(Eigen::Vector3d xi,Eigen::Vector3d xj,Eigen::Vector3d 
                           Eigen::Vector3d& ei,Eigen::Matrix3d& Ai,Eigen::Matrix3d& Bi)
 {
     //TODO--Start
+    Eigen::Vector2d ti = xi.head(2);
+    Eigen::Vector2d tj = xj.head(2);
+    Eigen::Vector2d tij = z.head(2);
+
+    double ri = xi(2);
+    double rj = xj(2);
+    double rij= z(2);
+
+    Eigen::Matrix2d Ri, Rij;
+
+    Ri << cos(ri),-sin(ri)
+          sin(ri), cos(ri);
+    
+    Rij<< cos(rij),-sin(rij)
+          sin(rij), cos(rij);
+
+    // ei
+    ei.head(2) = Rij.transpose() * (Ri.transpose() * (tj - ti) - tij);
+    ei(2) = normalAngle(rj - ri - rij);
+
+    // Ai
+    Ai.setZero();
+    Ai.block(0, 0, 2, 2) = -Rij.transpose() * Ri.transpose();
+
+    Eigen::Matrix2d dRiT;
+    dRiT << -sin(ri), cos(ri), 
+            -cos(ri),-sin(ri);
+    Ai.block(0, 2, 2, 1) = Rij.transpose() * dRiT * (tj - ti);
+
+    Ai(2, 2) = -1;
+
+    // Bi
+    Bi.setIdentity();
+    Bi.block(0, 0, 2, 2) = Rij.transpose() * Ri.transpose();
     //TODO--end
 }
 
@@ -114,7 +150,16 @@ Eigen::VectorXd  LinearizeAndSolve(std::vector<Eigen::Vector3d>& Vertexs,
         Eigen::Matrix3d Bi;
         CalcJacobianAndError(xi,xj,z,ei,Ai,Bi);
 
-         //TODO--Start
+        //TODO--Start
+        // H
+        H.block(3*tmpEdge.xi, 3*tmpEdge.xi, 3, 3) += Ai.transpose() * infoMatrix * Ai;
+        H.block(3*tmpEdge.xi, 3*tmpEdge.xj, 3, 3) += Ai.transpose() * infoMatrix * Bi;
+        H.block(3*tmpEdge.xj, 3*tmpEdge.xi, 3, 3) += Bi.transpose() * infoMatrix * Ai;
+        H.block(3*tmpEdge.xj, 3*tmpEdge.xj, 3, 3) += Bi.transpose() * infoMatrix * Bi;
+
+        // b
+        b.block(3*tmpEdge.xi, 0, 3, 1) += Ai.transpose() * infoMatrix * ei;
+        b.block(3*tmpEdge.xj, 0, 3, 1) += Bi.transpose() * infoMatrix * ei;
         //TODO--End
     }
 
@@ -122,6 +167,14 @@ Eigen::VectorXd  LinearizeAndSolve(std::vector<Eigen::Vector3d>& Vertexs,
     Eigen::VectorXd dx;
 
     //TODO--Start
+    // sparse H
+    Eigen::SparseMatrix<double> Hsp = H.sparseView();
+
+    // solver
+    Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> solver;
+    solver.compute(H_sp);
+
+    dx = solver.solve(-b);
 
     //TODO-End
 
@@ -129,7 +182,14 @@ Eigen::VectorXd  LinearizeAndSolve(std::vector<Eigen::Vector3d>& Vertexs,
 }
 
 
+double normalAngle(double angle)
+{
+    while (angle > M_PI) angle -= 2 * M_PI;
 
+    while (angle <-M_PI) angle += 2 * M_PI;
+
+    return angle;
+}
 
 
 
