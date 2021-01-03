@@ -4,6 +4,10 @@
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
 
+#define test "test"
+#define intel "intel"
+#define killian "killian"
+
 
 //for visual
 void PublishGraphForVisulization(ros::Publisher* pub,
@@ -119,12 +123,37 @@ int main(int argc, char **argv)
     beforeGraphPub = nodeHandle.advertise<visualization_msgs::MarkerArray>("beforePoseGraph",1,true);
     afterGraphPub  = nodeHandle.advertise<visualization_msgs::MarkerArray>("afterPoseGraph",1,true);
 
+    std::string data;
+    if (ros::param::get("data", data)) {
+        std::cout << "Successfully retrieve data" << std::endl;
+    } else {
+        std::cout << "Could not retrieve data, set default to 'test'" << std::endl;
+        data = test;
+    }
+
+    std::string VertexPath, EdgePath;
+
+    switch (data)
+    {
+    case intel:
+        VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-v.dat";
+        EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-e.dat";
+        break;
+    case killian:
+        VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/killian-v.dat.dat";
+        EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/killian-e.dat.dat";
+        break;
+    default:
+        VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-v.dat";
+        EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-e.dat";
+        break;
+    }
 
     // std::string VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-v.dat";
     // std::string EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-e.dat";
 
-   std::string VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-v.dat";
-   std::string EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-e.dat";
+//    std::string VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-v.dat";
+//    std::string EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-e.dat";
 
     std::vector<Eigen::Vector3d> Vertexs;
     std::vector<Edge> Edges;

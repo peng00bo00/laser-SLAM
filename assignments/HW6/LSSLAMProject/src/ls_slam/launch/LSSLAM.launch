@@ -1,0 +1,5 @@
+<launch>
+   <arg name="arg_data" default="test"/>
+   <param name="data" value="$(arg arg_data)"/>
+   <node name="ls_slam_node" pkg="LSSLAMProject"  type="ls_slam" output="screen" />
+</launch>
