@@ -120,11 +120,11 @@ int main(int argc, char **argv)
     afterGraphPub  = nodeHandle.advertise<visualization_msgs::MarkerArray>("afterPoseGraph",1,true);
 
 
-    std::string VertexPath = "/home/eventec/LSSLAMProject/src/ls_slam/data/test_quadrat-v.dat";
-    std::string EdgePath = "/home/eventec/LSSLAMProject/src/ls_slam/data/test_quadrat-e.dat";
+    // std::string VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-v.dat";
+    // std::string EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-e.dat";
 
-//    std::string VertexPath = "/home/eventec/LSSLAMProject/src/ls_slam/data/intel-v.dat";
-//    std::string EdgePath = "/home/eventec/LSSLAMProject/src/ls_slam/data/intel-e.dat";
+   std::string VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-v.dat";
+   std::string EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-e.dat";
 
     std::vector<Eigen::Vector3d> Vertexs;
     std::vector<Edge> Edges;
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
         //TODO--Start
         for (int j = 0; j < Vertexs.size(); j++) {
             Vertexs[j] += dx.block(3 * j, 0, 3, 1);
-            Vertexs[j](2) = normalAngle(Vertexs[j](2));
+            normalAngle(Vertexs[j](2));
         }
         //TODO--End
 

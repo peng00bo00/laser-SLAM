@@ -5,7 +5,7 @@
 #include <eigen3/Eigen/Cholesky>
 #include <eigen3/Eigen/LU>
 
-#include<Eigen/SparseCholesky>
+#include <eigen3/Eigen/SparseCholesky>
 
 #include <iostream>
 
@@ -85,15 +85,16 @@ void CalcJacobianAndError(Eigen::Vector3d xi,Eigen::Vector3d xj,Eigen::Vector3d 
 
     Eigen::Matrix2d Ri, Rij;
 
-    Ri << cos(ri),-sin(ri)
+    Ri << cos(ri),-sin(ri),
           sin(ri), cos(ri);
     
-    Rij<< cos(rij),-sin(rij)
+    Rij<< cos(rij),-sin(rij),
           sin(rij), cos(rij);
 
     // ei
     ei.head(2) = Rij.transpose() * (Ri.transpose() * (tj - ti) - tij);
-    ei(2) = normalAngle(rj - ri - rij);
+    ei(2) = rj - ri - rij;
+    normalAngle(ei(2));
 
     // Ai
     Ai.setZero();
@@ -171,8 +172,8 @@ Eigen::VectorXd  LinearizeAndSolve(std::vector<Eigen::Vector3d>& Vertexs,
     Eigen::SparseMatrix<double> Hsp = H.sparseView();
 
     // solver
-    Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> solver;
-    solver.compute(H_sp);
+    Eigen::SimplicialLLT< Eigen::SparseMatrix<double> > solver;
+    solver.compute(Hsp);
 
     dx = solver.solve(-b);
 
@@ -181,15 +182,6 @@ Eigen::VectorXd  LinearizeAndSolve(std::vector<Eigen::Vector3d>& Vertexs,
     return dx;
 }
 
-
-double normalAngle(double angle)
-{
-    while (angle > M_PI) angle -= 2 * M_PI;
-
-    while (angle <-M_PI) angle += 2 * M_PI;
-
-    return angle;
-}
 
 
 

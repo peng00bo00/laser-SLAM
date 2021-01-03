@@ -18,13 +18,11 @@ Eigen::VectorXd  LinearizeAndSolve(std::vector<Eigen::Vector3d>& Vertexs,
 double ComputeError(std::vector<Eigen::Vector3d>& Vertexs,
                     std::vector<Edge>& Edges);
 
-double normalAngle(double angle)
+inline void normalAngle(double &angle)
 {
     while (angle > M_PI) angle -= 2 * M_PI;
 
     while (angle <-M_PI) angle += 2 * M_PI;
-
-    return angle;
 }
 
 
