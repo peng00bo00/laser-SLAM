@@ -8,7 +8,7 @@
 #include <gtsam/inference/Key.h>
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+#include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/Values.h>
 
@@ -180,36 +180,10 @@ int main(int argc, char **argv)
     int maxIteration = 100;
     double epsilon = 1e-4;
 
-    // for(int i = 0; i < maxIteration;i++)
-    // {
-    //     std::cout <<"Iterations:"<<i<<std::endl;
-    //     Eigen::VectorXd dx = LinearizeAndSolve(Vertexs,Edges);
-
-    //     //进行更新
-    //     //TODO--Start
-    //     for (int j = 0; j < Vertexs.size(); j++) {
-    //         Vertexs[j] += dx.block(3 * j, 0, 3, 1);
-    //         normalAngle(Vertexs[j](2));
-    //     }
-    //     //TODO--End
-
-    //     double maxError = -1;
-    //     for(int k = 0; k < 3 * Vertexs.size();k++)
-    //     {
-    //         if(maxError < std::fabs(dx(k)))
-    //         {
-    //             maxError = std::fabs(dx(k));
-    //         }
-    //     }
-
-    //     if(maxError < epsilon)
-    //         break;
-    // }
-
-    // Create an empty nonlinear factor graph
+    // create a factor graph
     NonlinearFactorGraph graph;
 
-    // Add a Gaussian prior on pose x_1
+    // add a prior to x0
     Pose2 priorMean(0.0, 0.0, 0.0);
     noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Sigmas(Vector3(0.0, 0.0, 0.0));
     graph.add(PriorFactor<Pose2>(0, priorMean, priorNoise));
@@ -234,6 +208,7 @@ int main(int argc, char **argv)
     // std::cout << "x2 covariance:\n" << marginals.marginalCovariance(2) << std::endl;
     // std::cout << "x3 covariance:\n" << marginals.marginalCovariance(3) << std::endl;
 
+    // add factors
     for (auto & edge: Edges) {
         Eigen::Vector3d z = edge.measurement;
         double x = z(0);
@@ -247,6 +222,7 @@ int main(int argc, char **argv)
         graph.add(BetweenFactor<Pose2>(edge.xi, edge.xj, measurement, infoMatrix));
     }
 
+    // add initial poses
     Values initial;
     for (size_t i = 0; i < Vertexs.size(); i++)
     {
@@ -254,17 +230,18 @@ int main(int argc, char **argv)
         initial.insert(i, Pose2(pose(0), pose(1), pose(2)));
     }
 
-    Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
-    Marginals marginals(graph, result);
+    // graph optimization
+    Values result = DogLegOptimizer(graph, initial).optimize();
 
-    for (int j = 0; j < Vertexs.size(); j++) {
+    // retrieve optimization results
+    for (int i = 0; i < Vertexs.size(); i++) {
         Pose2 pose = result.at<Pose2>(j);
 
-        Vertexs[j](0) = pose.x();
-        Vertexs[j](1) = pose.y();
-        Vertexs[j](2) = pose.theta();
+        Vertexs[i](0) = pose.x();
+        Vertexs[i](1) = pose.y();
+        Vertexs[i](2) = pose.theta();
 
-        normalAngle(Vertexs[j](2));
+        normalAngle(Vertexs[i](2));
     }
 
     double finalError  = ComputeError(Vertexs,Edges);
