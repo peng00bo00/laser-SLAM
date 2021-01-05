@@ -4,9 +4,20 @@
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
 
+#include <gtsam/geometry/Pose2.h>
+#include <gtsam/inference/Key.h>
+#include <gtsam/slam/BetweenFactor.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/nonlinear/Values.h>
+#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+#include <gtsam/nonlinear/Marginals.h>
+#include <gtsam/nonlinear/NonlinearFactor.h>`
+
 #define test "test"
 #define intel "intel"
 #define killian "killian"
+
+using namespace gtsam;
 
 
 //for visual
@@ -171,31 +182,31 @@ int main(int argc, char **argv)
     int maxIteration = 100;
     double epsilon = 1e-4;
 
-    for(int i = 0; i < maxIteration;i++)
-    {
-        std::cout <<"Iterations:"<<i<<std::endl;
-        Eigen::VectorXd dx = LinearizeAndSolve(Vertexs,Edges);
+    // for(int i = 0; i < maxIteration;i++)
+    // {
+    //     std::cout <<"Iterations:"<<i<<std::endl;
+    //     Eigen::VectorXd dx = LinearizeAndSolve(Vertexs,Edges);
 
-        //进行更新
-        //TODO--Start
-        for (int j = 0; j < Vertexs.size(); j++) {
-            Vertexs[j] += dx.block(3 * j, 0, 3, 1);
-            normalAngle(Vertexs[j](2));
-        }
-        //TODO--End
+    //     //进行更新
+    //     //TODO--Start
+    //     for (int j = 0; j < Vertexs.size(); j++) {
+    //         Vertexs[j] += dx.block(3 * j, 0, 3, 1);
+    //         normalAngle(Vertexs[j](2));
+    //     }
+    //     //TODO--End
 
-        double maxError = -1;
-        for(int k = 0; k < 3 * Vertexs.size();k++)
-        {
-            if(maxError < std::fabs(dx(k)))
-            {
-                maxError = std::fabs(dx(k));
-            }
-        }
+    //     double maxError = -1;
+    //     for(int k = 0; k < 3 * Vertexs.size();k++)
+    //     {
+    //         if(maxError < std::fabs(dx(k)))
+    //         {
+    //             maxError = std::fabs(dx(k));
+    //         }
+    //     }
 
-        if(maxError < epsilon)
-            break;
-    }
+    //     if(maxError < epsilon)
+    //         break;
+    // }
 
 
     double finalError  = ComputeError(Vertexs,Edges);
