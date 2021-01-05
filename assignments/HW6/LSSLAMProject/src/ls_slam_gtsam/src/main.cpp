@@ -231,7 +231,7 @@ int main(int argc, char **argv)
     }
 
     // graph optimization
-    Values result = DogLegOptimizer(graph, initial).optimize();
+    Values result = DoglegOptimizer(graph, initial).optimize();
 
     // retrieve optimization results
     for (int i = 0; i < Vertexs.size(); i++) {
