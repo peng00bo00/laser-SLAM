@@ -211,7 +211,7 @@ int main(int argc, char **argv)
 
     // Add a Gaussian prior on pose x_1
     Pose2 priorMean(0.0, 0.0, 0.0);
-    noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Sigmas(Vector3(0.3, 0.3, 0.1));
+    noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Sigmas(Vector3(0.0, 0.0, 0.0));
     graph.add(PriorFactor<Pose2>(0, priorMean, priorNoise));
 
     // // Add two odometry factors
@@ -234,7 +234,6 @@ int main(int argc, char **argv)
     // std::cout << "x2 covariance:\n" << marginals.marginalCovariance(2) << std::endl;
     // std::cout << "x3 covariance:\n" << marginals.marginalCovariance(3) << std::endl;
 
-    std::cout << "Adding edges..." << std::endl;
     for (auto & edge: Edges) {
         Eigen::Vector3d z = edge.measurement;
         double x = z(0);
@@ -243,37 +242,34 @@ int main(int argc, char **argv)
 
         Matrix3 info = edge.infoMatrix;
         noiseModel::Gaussian::shared_ptr infoMatrix = noiseModel::Gaussian::Information(info);
-        // noiseModel::Diagonal::shared_ptr odometryNoise = noiseModel::Diagonal::Sigmas(Vector3(0.2, 0.2, 0.1));
         
         Pose2 measurement(x, y, theta);
-        // std::cout << "Adding edge between " << edge.xi << " and " << edge.xj << std::endl;
         graph.add(BetweenFactor<Pose2>(edge.xi, edge.xj, measurement, infoMatrix));
     }
-    graph.print("\nFactor Graph:\n");
 
-    std::cout << "Adding vertices..." << std::endl;
     Values initial;
     for (size_t i = 0; i < Vertexs.size(); i++)
     {
         Eigen::Vector3d pose = Vertexs[i];
         initial.insert(i, Pose2(pose(0), pose(1), pose(2)));
     }
-    initial.print("\nInitial Estimate:\n");
 
     Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
     Marginals marginals(graph, result);
 
-    result.print("Final Result:\n");
-
     for (int j = 0; j < Vertexs.size(); j++) {
-        Vertexs[j] = result(i);
+        Pose2 pose = result.at<Pose2>(j);
+
+        Vertexs[j](0) = pose.x();
+        Vertexs[j](1) = pose.y();
+        Vertexs[j](2) = pose.theta();
+
         normalAngle(Vertexs[j](2));
     }
 
-
     double finalError  = ComputeError(Vertexs,Edges);
 
-    std::cout <<"FinalError:"<<finalError<<std::endl;
+    std::cout <<"FinalError:"<< finalError <<std::endl;
 
     PublishGraphForVisulization(&afterGraphPub,
                                 Vertexs,
