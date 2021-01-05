@@ -249,12 +249,12 @@ int main(int argc, char **argv)
         // double info_yt = info(1, 2);
         // double info_tt = info(2, 2);
         Matrix3 info = edge.infoMatrix;
-        // noiseModel::Gaussian::shared_ptr;
-        noiseModel::Diagonal::shared_ptr odometryNoise = noiseModel::Diagonal::Sigmas(Vector3(0.2, 0.2, 0.1));
+        noiseModel::Gaussian::shared_ptr infoMatrix = noiseModel::Gaussian::Information(info);
+        // noiseModel::Diagonal::shared_ptr odometryNoise = noiseModel::Diagonal::Sigmas(Vector3(0.2, 0.2, 0.1));
         
         Pose2 measurement(x, y, theta);
         // std::cout << "Adding edge between " << edge.xi << " and " << edge.xj << std::endl;
-        graph.add(BetweenFactor<Pose2>(edge.xi, edge.xj, measurement, odometryNoise));
+        graph.add(BetweenFactor<Pose2>(edge.xi, edge.xj, measurement, infoMatrix));
     }
     graph.print("\nFactor Graph:\n");
 
