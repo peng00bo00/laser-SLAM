@@ -8,17 +8,15 @@
 #include <gtsam/inference/Key.h>
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
-#include <gtsam/nonlinear/Values.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/Marginals.h>
-#include <gtsam/nonlinear/NonlinearFactor.h>`
+#include <gtsam/nonlinear/Values.h>
+
+using namespace gtsam;
 
 #define test "test"
 #define intel "intel"
 #define killian "killian"
-
-using namespace gtsam;
-
 
 //for visual
 void PublishGraphForVisulization(ros::Publisher* pub,
@@ -146,18 +144,18 @@ int main(int argc, char **argv)
 
     if (data.compare(intel) == 0) {
         std::cout << "Using Intel data set" << std::endl;
-        VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-v.dat";
-        EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/intel-e.dat";
+        VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam_gtsam/data/intel-v.dat";
+        EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam_gtsam/data/intel-e.dat";
     }
     else if (data.compare(killian) == 0) {
         std::cout << "Using killian data set" << std::endl;
-        VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/killian-v.dat";
-        EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/killian-e.dat";
+        VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam_gtsam/data/killian-v.dat";
+        EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam_gtsam/data/killian-e.dat";
     }
     else {
         std::cout << "Using test data set" << std::endl;
-        VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-v.dat";
-        EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-e.dat";
+        VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam_gtsam/data/test_quadrat-v.dat";
+        EdgePath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam_gtsam/data/test_quadrat-e.dat";
     }
 
     // std::string VertexPath = "/home/pengbo/laser-SLAM/assignments/HW6/LSSLAMProject/src/ls_slam/data/test_quadrat-v.dat";

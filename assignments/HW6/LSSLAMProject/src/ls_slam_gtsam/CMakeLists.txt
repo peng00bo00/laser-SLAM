@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ls_slam)
+project(ls_slam_gtsam)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -148,8 +148,8 @@ include(GtsamTesting)
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/ls_slam_node.cpp)
 
-add_executable(ls_slam src/main.cpp src/readfile.cpp src/gaussian_newton.cpp)
-target_link_libraries(ls_slam ${catkin_LIBRARIES} ${CSPARSE_LIBRARY} gtsam)
+add_executable(ls_slam_gtsam src/main.cpp src/readfile.cpp src/gaussian_newton.cpp)
+target_link_libraries(ls_slam_gtsam ${catkin_LIBRARIES} ${CSPARSE_LIBRARY} gtsam)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

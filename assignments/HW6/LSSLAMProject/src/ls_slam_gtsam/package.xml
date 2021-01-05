@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>ls_slam</name>
+  <name>ls_slam_gtsam</name>
   <version>0.0.0</version>
-  <description>The ls_slam package</description>
+  <description>The ls_slam_gtsam package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
