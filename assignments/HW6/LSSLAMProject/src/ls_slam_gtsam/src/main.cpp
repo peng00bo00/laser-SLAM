@@ -235,7 +235,7 @@ int main(int argc, char **argv)
 
     // retrieve optimization results
     for (int i = 0; i < Vertexs.size(); i++) {
-        Pose2 pose = result.at<Pose2>(j);
+        Pose2 pose = result.at<Pose2>(i);
 
         Vertexs[i](0) = pose.x();
         Vertexs[i](1) = pose.y();
