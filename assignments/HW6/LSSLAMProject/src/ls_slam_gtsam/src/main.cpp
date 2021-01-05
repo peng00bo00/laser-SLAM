@@ -241,13 +241,6 @@ int main(int argc, char **argv)
         double y = z(1);
         double theta = z(2);
 
-        // Eigen::Matrix3d info = edge.infoMatrix;
-        // double info_xx = info(0, 0);
-        // double info_xy = info(0, 1);
-        // double info_xt = info(0, 2);
-        // double info_yy = info(1, 1);
-        // double info_yt = info(1, 2);
-        // double info_tt = info(2, 2);
         Matrix3 info = edge.infoMatrix;
         noiseModel::Gaussian::shared_ptr infoMatrix = noiseModel::Gaussian::Information(info);
         // noiseModel::Diagonal::shared_ptr odometryNoise = noiseModel::Diagonal::Sigmas(Vector3(0.2, 0.2, 0.1));
@@ -271,6 +264,11 @@ int main(int argc, char **argv)
     Marginals marginals(graph, result);
 
     result.print("Final Result:\n");
+
+    for (int j = 0; j < Vertexs.size(); j++) {
+        Vertexs[j] = result(i);
+        normalAngle(Vertexs[j](2));
+    }
 
 
     double finalError  = ComputeError(Vertexs,Edges);
