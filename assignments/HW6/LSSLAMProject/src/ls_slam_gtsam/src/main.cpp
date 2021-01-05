@@ -209,10 +209,10 @@ int main(int argc, char **argv)
     // Create an empty nonlinear factor graph
     NonlinearFactorGraph graph;
 
-    // // Add a Gaussian prior on pose x_1
-    // Pose2 priorMean(0.0, 0.0, 0.0);
-    // noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Sigmas(Vector3(0.3, 0.3, 0.1));
-    // graph.add(PriorFactor<Pose2>(1, priorMean, priorNoise));
+    // Add a Gaussian prior on pose x_1
+    Pose2 priorMean(0.0, 0.0, 0.0);
+    noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Sigmas(Vector3(0.3, 0.3, 0.1));
+    graph.add(PriorFactor<Pose2>(0, priorMean, priorNoise));
 
     // // Add two odometry factors
     // Pose2 odometry(2.0, 0.0, 0.0);
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
     // std::cout << "x2 covariance:\n" << marginals.marginalCovariance(2) << std::endl;
     // std::cout << "x3 covariance:\n" << marginals.marginalCovariance(3) << std::endl;
 
-
+    std::cout << "Adding edges..." << std::endl;
     for (auto & edge: Edges) {
         Eigen::Vector3d z = edge.measurement;
         double x = z(0);
@@ -253,15 +253,19 @@ int main(int argc, char **argv)
         noiseModel::Diagonal::shared_ptr odometryNoise = noiseModel::Diagonal::Sigmas(Vector3(0.2, 0.2, 0.1));
         
         Pose2 measurement(x, y, theta);
+        // std::cout << "Adding edge between " << edge.xi << " and " << edge.xj << std::endl;
         graph.add(BetweenFactor<Pose2>(edge.xi, edge.xj, measurement, odometryNoise));
     }
+    graph.print("\nFactor Graph:\n");
 
+    std::cout << "Adding vertices..." << std::endl;
     Values initial;
     for (size_t i = 0; i < Vertexs.size(); i++)
     {
         Eigen::Vector3d pose = Vertexs[i];
-        initial.insert(1, Pose2(pose(0), pose(1), pose(2)));
+        initial.insert(i, Pose2(pose(0), pose(1), pose(2)));
     }
+    initial.print("\nInitial Estimate:\n");
 
     Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
     Marginals marginals(graph, result);
