@@ -9,6 +9,7 @@
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/DoglegOptimizer.h>
+#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/Values.h>
 
@@ -184,29 +185,9 @@ int main(int argc, char **argv)
     NonlinearFactorGraph graph;
 
     // add a prior to x0
-    Pose2 priorMean(0.0, 0.0, 0.0);
-    noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Sigmas(Vector3(0.0, 0.0, 0.0));
+    Pose2 priorMean(Vertexs[0](0), Vertexs[0](1), Vertexs[0](2));
+    noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Sigmas(Vector3(0.1, 0.1, 0.1));
     graph.add(PriorFactor<Pose2>(0, priorMean, priorNoise));
-
-    // // Add two odometry factors
-    // Pose2 odometry(2.0, 0.0, 0.0);
-    // noiseModel::Diagonal::shared_ptr odometryNoise = noiseModel::Diagonal::Sigmas(Vector3(0.2, 0.2, 0.1));
-    // graph.add(BetweenFactor<Pose2>(1, 2, odometry, odometryNoise));
-    // graph.add(BetweenFactor<Pose2>(2, 3, odometry, odometryNoise));
-
-    // // create (deliberately inaccurate) initial estimate
-    // Values initial;
-    // initial.insert(1, Pose2(0.5, 0.0, 0.2));
-    // initial.insert(2, Pose2(2.3, 0.1, -0.2));
-    // initial.insert(3, Pose2(4.1, 0.1, 0.1));
-
-    // // optimize using Levenberg-Marquardt optimization
-    // Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
-
-    // Marginals marginals(graph, result);
-    // std::cout << "x1 covariance:\n" << marginals.marginalCovariance(1) << std::endl;
-    // std::cout << "x2 covariance:\n" << marginals.marginalCovariance(2) << std::endl;
-    // std::cout << "x3 covariance:\n" << marginals.marginalCovariance(3) << std::endl;
 
     // add factors
     for (auto & edge: Edges) {
@@ -215,8 +196,7 @@ int main(int argc, char **argv)
         double y = z(1);
         double theta = z(2);
 
-        Matrix3 info = edge.infoMatrix;
-        noiseModel::Gaussian::shared_ptr infoMatrix = noiseModel::Gaussian::Information(info);
+        noiseModel::Gaussian::shared_ptr infoMatrix = noiseModel::Gaussian::Information(edge.infoMatrix);
         
         Pose2 measurement(x, y, theta);
         graph.add(BetweenFactor<Pose2>(edge.xi, edge.xj, measurement, infoMatrix));
@@ -231,7 +211,12 @@ int main(int argc, char **argv)
     }
 
     // graph optimization
-    Values result = DoglegOptimizer(graph, initial).optimize();
+    DoglegParams params;
+    params.relativeErrorTol = 1e-5;
+    params.maxIterations = 1000;
+
+    DoglegOptimizer optimizer(graph, initial, params);
+    Values result = optimizer.optimize();
 
     // retrieve optimization results
     for (int i = 0; i < Vertexs.size(); i++) {
