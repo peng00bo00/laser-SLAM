@@ -187,6 +187,23 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
             double world_y = sin(theta) * laser_x + cos(theta) * laser_y + robotPose(1);
 
             //start of TODO 对对应的map的cell信息进行更新．（1,2,3题内容）
+            GridIndex occupancyIndex = ConvertWorld2GridIndex(world_x, world_y);
+            if (!isValidGridIndex(occupancyIndex)) continue;
+
+            // update free grids
+            std::vector<GridIndex> gridIndexVector = TraceLine(robotIndex.x, robotIndex.y, occupancyIndex.x, occupancyIndex.y);
+
+            for (auto & gridIndex: gridIndexVector)
+            {
+                int gridID = GridIndexToLinearIndex(gridIndex);
+                pMap[gridID] += mapParams.log_free;
+                pMap[gridID] = std::clamp(pMap[gridID], mapParams.log_min, mapParams.log_max);
+            }
+
+            // update the occupied grid
+            int gridID = GridIndexToLinearIndex(occupancyIndex);
+            pMap[gridID] += mapParams.log_occ;
+            pMap[gridID] = std::clamp(pMap[gridID], mapParams.log_min, mapParams.log_max);
             //end of TODO
         }
     }
