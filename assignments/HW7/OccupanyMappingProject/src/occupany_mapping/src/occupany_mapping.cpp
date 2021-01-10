@@ -208,7 +208,7 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
                 pMap[gridID] = clamp(mapParams.log_free + pMap[gridID], mapParams.log_min, mapParams.log_max);
 
                 // Q2
-                // pMapMisses[gridID]++;
+                pMapMisses[gridID]++;
             }
 
             // update the occupied grid
@@ -218,19 +218,56 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
             pMap[gridID] = clamp(mapParams.log_occ + pMap[gridID], mapParams.log_min, mapParams.log_max);
 
             // Q2
-            // pMapHits[gridID]++;
+            pMapHits[gridID]++;
+
+            // Q3
+            double t = 2 * mapParams.resolution;
+            double far = dist + t;
+
+            double far_x = far * cos(angle);
+            double far_y = far * sin(angle);
+
+            double far_world_x = cos(theta) * far_x - sin(theta) * far_y + robotPose(0);
+            double far_world_y = sin(theta) * far_x + cos(theta) * far_y + robotPose(1);
+
+            GridIndex farIndex = ConvertWorld2GridIndex(far_world_x, far_world_y);
+            std::vector<GridIndex> farIndexVector;
+
+            if (isValidGridIndex(farIndex)) farIndexVector = TraceLine(robotIndex.x, robotIndex.y, farIndex.x, farIndex.y);
+            else farIndexVector = TraceLine(robotIndex.x, robotIndex.y, occupancyIndex.x, occupancyIndex.y);
+
+            // build TSDF
+            for (int j = 0; j < farIndexVector.size(); j++)
+            {
+                int gridID = GridIndexToLinearIndex(gridIndexVector[j]);
+
+                // sdf = laser_dist - grid_dist
+                double grid_dist = sqrt(pow(robotIndex.x - gridID.x, 2) + pow(robotIndex.y - gridID.y, 2));
+                grid_dist *= mapParams.resolution;
+                double sdf = dist - grid_dist;
+
+                // sdf -> tsdf
+                double tsdf = std::max(-1.0, std::min(1.0, sdf / t));
+
+                // update TSDF
+                double w = 1.0;
+                pMapTSDF[gridID] = (pMapW[gridID] * pMapTSDF[gridID] + w * tsdf) / (pMapW[gridID] + w);
+                pMapW[gridID] += w;
+            }
+            
+
             //end of TODO
         }
     }
     //start of TODO 通过计数建图算法或TSDF算法对栅格进行更新（2,3题内容）
     // Q1
-    for (int i = 0; i < mapParams.width * mapParams.height; i++) {
-        if (pMap[i] == 50) continue;
-        else {
-            if (pMap[i] > 50) pMap[i] = mapParams.log_max;
-            else pMap[i] = mapParams.log_min;
-        }
-    }
+    // for (int i = 0; i < mapParams.width * mapParams.height; i++) {
+    //     if (pMap[i] == 50) continue;
+    //     else {
+    //         if (pMap[i] > 50) pMap[i] = mapParams.log_max;
+    //         else pMap[i] = mapParams.log_min;
+    //     }
+    // }
 
     // Q2
     // for (int i = 0; i < mapParams.width * mapParams.height; i++) {
@@ -245,6 +282,29 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
     //         else pMap[i] = mapParams.log_min;
     //     }
     // }
+
+    // Q3
+    for (int i = 0; i < mapParams.height; i++)
+    {
+        for (int j = 0; j < mapParams.width - 1; i++)
+        {
+            GridIndex gridIndex;
+            gridIndex.SetIndex(i, j);
+
+            GridIndex neighbor;
+            neighbor.SetIndex(i, j+1);
+
+            int gridID = GridIndexToLinearIndex(gridIndex);
+            int neighborID = GridIndexToLinearIndex(neighbor);
+
+            if (pMapTSDF[gridID] * pMapTSDF[neighborID] <= 0) {
+                if (abs(pMapTSDF[gridID]) < abs(pMapTSDF[neighborID])) pMap[gridID] = mapParams.log_max;
+                else pMap[neighborID] = mapParams.log_max;
+            }
+        }
+        
+    }
+    
 
     //end of TODO
     std::cout << "建图完毕" << std::endl;
