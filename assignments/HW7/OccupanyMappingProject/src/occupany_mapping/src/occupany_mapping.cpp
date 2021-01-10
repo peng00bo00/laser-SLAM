@@ -205,40 +205,48 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
                 int gridID = GridIndexToLinearIndex(gridIndexVector[j]);
 
                 // Q1
-                // pMap[gridID] += mapParams.log_free;
+                pMap[gridID] += mapParams.log_free;
                 // pMap[gridID] = clamp(pMap[gridID], mapParams.log_min, mapParams.log_max);
 
                 // Q2
-                pMapMisses[gridID]++;
+                // pMapMisses[gridID]++;
             }
 
             // update the occupied grid
             int gridID = GridIndexToLinearIndex(occupancyIndex);
 
             // Q1
-            // pMap[gridID] += mapParams.log_occ;
+            pMap[gridID] += mapParams.log_occ;
             // pMap[gridID] = clamp(pMap[gridID], mapParams.log_min, mapParams.log_max);
 
             // Q2
-            pMapHits[gridID]++;
+            // pMapHits[gridID]++;
             //end of TODO
         }
     }
     //start of TODO 通过计数建图算法或TSDF算法对栅格进行更新（2,3题内容）
-
-    // Q2
+    // Q1
     for (int i = 0; i < mapParams.width * mapParams.height; i++) {
-        int counts = pMapMisses[i] + pMapHits[i];
-
-        if (counts == 0) pMap[i] = 50;
+        if (pMap[i] == 50) continue;
         else {
-            double m = double(pMapMisses[i]) / counts;
-            double thre = 0.5;
-
-            if (m > thre) pMap[i] = mapParams.log_max;
+            if (pMap[i] > 50) pMap[i] = mapParams.log_max;
             else pMap[i] = mapParams.log_min;
         }
     }
+
+    // Q2
+    // for (int i = 0; i < mapParams.width * mapParams.height; i++) {
+    //     int counts = pMapMisses[i] + pMapHits[i];
+
+    //     if (counts == 0) pMap[i] = 50;
+    //     else {
+    //         double m = double(pMapHits[i]) / counts;
+    //         double thre = 0.5;
+
+    //         if (m > thre) pMap[i] = mapParams.log_max;
+    //         else pMap[i] = mapParams.log_min;
+    //     }
+    // }
 
     //end of TODO
     std::cout << "建图完毕" << std::endl;
