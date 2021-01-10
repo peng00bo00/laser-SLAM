@@ -192,23 +192,45 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
             double world_y = sin(theta) * laser_x + cos(theta) * laser_y + robotPose(1);
 
             //start of TODO 对对应的map的cell信息进行更新．（1,2,3题内容）
-            GridIndex occupancyIndex = ConvertWorld2GridIndex(world_x, world_y);
-            if (isValidGridIndex(occupancyIndex) == false) continue;
+            // GridIndex occupancyIndex = ConvertWorld2GridIndex(world_x, world_y);
+            // if (isValidGridIndex(occupancyIndex) == false) continue;
 
-            // update free grids
-            std::vector<GridIndex> gridIndexVector = TraceLine(robotIndex.x, robotIndex.y, occupancyIndex.x, occupancyIndex.y);
+            // // update free grids
+            // std::vector<GridIndex> gridIndexVector = TraceLine(robotIndex.x, robotIndex.y, occupancyIndex.x, occupancyIndex.y);
 
-            for (int j = 0; j < gridIndexVector.size(); j++)
-            {
-                int gridID = GridIndexToLinearIndex(gridIndexVector[j]);
-                pMap[gridID] += mapParams.log_free;
-                pMap[gridID] = std::max(mapParams.log_min, double(pMap[gridID]));
+            // for (int j = 0; j < gridIndexVector.size(); j++)
+            // {
+            //     int gridID = GridIndexToLinearIndex(gridIndexVector[j]);
+            //     pMap[gridID] += mapParams.log_free;
+            //     pMap[gridID] = std::max(mapParams.log_min, double(pMap[gridID]));
+            // }
+
+            // // update the occupied grid
+            // int gridID = GridIndexToLinearIndex(occupancyIndex);
+            // pMap[gridID] += mapParams.log_occ;
+            // pMap[gridID] = std::min(mapParams.log_max, double(pMap[gridID]));
+            GridIndex grid_x_y = ConvertWorld2GridIndex(world_x, world_y);
+
+            if (isValidGridIndex(grid_x_y) == false)
+                continue;
+
+            GridIndex robotPose_grid = ConvertWorld2GridIndex(robotPose[0], robotPose[1]);
+
+            //得到所有的被激光通过的index，并且更新栅格
+            std::vector<GridIndex> miss_grids = TraceLine(robotPose_grid.x, robotPose_grid.y, grid_x_y.x, grid_x_y.y);
+
+            // 更新被经过的点
+            for (size_t j = 0; j < miss_grids.size(); j++) {
+                GridIndex tmpIndex = miss_grids[j];
+                int linear_index = GridIndexToLinearIndex(tmpIndex);
+                pMap[linear_index] += mapParams.log_free;
+                pMap[linear_index] = max(mapParams.log_min, double(pMap[linear_index]));
             }
 
-            // update the occupied grid
-            int gridID = GridIndexToLinearIndex(occupancyIndex);
-            pMap[gridID] += mapParams.log_occ;
-            pMap[gridID] = std::min(mapParams.log_max, double(pMap[gridID]));
+            //更新被击中的点
+            int linear_index = GridIndexToLinearIndex(grid_x_y);
+            pMap[linear_index] += mapParams.log_occ;
+            pMap[linear_index] = min(mapParams.log_max, double(pMap[linear_index]));
             //end of TODO
         }
     }
