@@ -157,6 +157,11 @@ void DestoryMap()
         delete pMap;
 }
 
+double clamp( const double & v, const double & lo, const double & hi) {
+    assert( !(hi < lo) );
+    return (v < lo) ? lo : (hi < v) ? hi : v;
+}
+
 //
 void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Vector3d> &robot_poses)
 {
@@ -188,22 +193,22 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
 
             //start of TODO 对对应的map的cell信息进行更新．（1,2,3题内容）
             GridIndex occupancyIndex = ConvertWorld2GridIndex(world_x, world_y);
-            if (!isValidGridIndex(occupancyIndex)) continue;
+            if (isValidGridIndex(occupancyIndex) == false) continue;
 
             // update free grids
             std::vector<GridIndex> gridIndexVector = TraceLine(robotIndex.x, robotIndex.y, occupancyIndex.x, occupancyIndex.y);
 
-            for (auto & gridIndex: gridIndexVector)
+            for (int j = 0; j < gridIndexVector.size(); j++)
             {
-                int gridID = GridIndexToLinearIndex(gridIndex);
+                int gridID = GridIndexToLinearIndex(gridIndexVector[j]);
                 pMap[gridID] += mapParams.log_free;
-                pMap[gridID] = std::clamp(pMap[gridID], mapParams.log_min, mapParams.log_max);
+                pMap[gridID] = std::max(mapParams.log_min, double(pMap[gridID]));
             }
 
             // update the occupied grid
             int gridID = GridIndexToLinearIndex(occupancyIndex);
             pMap[gridID] += mapParams.log_occ;
-            pMap[gridID] = std::clamp(pMap[gridID], mapParams.log_min, mapParams.log_max);
+            pMap[gridID] = std::min(mapParams.log_max, double(pMap[gridID]));
             //end of TODO
         }
     }
@@ -265,7 +270,7 @@ int main(int argc, char **argv)
     std::vector<Eigen::Vector3d> robotPoses;
     std::vector<GeneralLaserScan> generalLaserScans;
 
-    std::string basePath = "/home/eventec/OccupanyMappingProject/src/data";
+    std::string basePath = "/home/pengbo/laser-SLAM/assignments/HW7/OccupanyMappingProject/src/data";
 
     std::string posePath = basePath + "/pose.txt";
     std::string anglePath = basePath + "/scanAngles.txt";
