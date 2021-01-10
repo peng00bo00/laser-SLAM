@@ -205,10 +205,7 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
                 int gridID = GridIndexToLinearIndex(gridIndexVector[j]);
 
                 // Q1
-                // std::cout << "Grid " << gridID << ": " << double(pMap[gridID]);
-                pMap[gridID] += mapParams.log_free;
-                pMap[gridID] = clamp(pMap[gridID], mapParams.log_min, mapParams.log_max);
-                // std::cout << " -> " << double(pMap[gridID]) << std::endl;
+                pMap[gridID] = clamp(mapParams.log_free + pMap[gridID], mapParams.log_min, mapParams.log_max);
 
                 // Q2
                 // pMapMisses[gridID]++;
@@ -218,10 +215,7 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
             int gridID = GridIndexToLinearIndex(occupancyIndex);
 
             // Q1
-            // std::cout << "Grid " << gridID << ": " << double(pMap[gridID]);
-            pMap[gridID] += mapParams.log_occ;
-            pMap[gridID] = clamp(pMap[gridID], mapParams.log_min, mapParams.log_max);
-            // std::cout << " -> " << double(pMap[gridID]) << std::endl;
+            pMap[gridID] = clamp(mapParams.log_occ + pMap[gridID], mapParams.log_min, mapParams.log_max);
 
             // Q2
             // pMapHits[gridID]++;
