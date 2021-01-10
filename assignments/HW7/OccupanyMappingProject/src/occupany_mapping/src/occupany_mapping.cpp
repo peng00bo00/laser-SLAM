@@ -239,7 +239,7 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
             // build TSDF
             for (int j = 0; j < farIndexVector.size(); j++)
             {
-                GridIndex gridIndex = gridIndexVector[j];
+                GridIndex gridIndex = farIndexVector[j];
                 int gridID = GridIndexToLinearIndex(gridIndex);
 
                 // sdf = laser_dist - grid_dist
@@ -256,38 +256,37 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
                 pMapW[gridID] += w;
             }
             
-
             //end of TODO
         }
     }
     //start of TODO 通过计数建图算法或TSDF算法对栅格进行更新（2,3题内容）
     // Q1
-    // for (int i = 0; i < mapParams.width * mapParams.height; i++) {
-    //     if (pMap[i] == 50) continue;
-    //     else {
-    //         if (pMap[i] > 50) pMap[i] = mapParams.log_max;
-    //         else pMap[i] = mapParams.log_min;
-    //     }
-    // }
+    for (int i = 0; i < mapParams.width * mapParams.height; i++) {
+        if (pMap[i] == 50) continue;
+        else {
+            if (pMap[i] > 50) pMap[i] = mapParams.log_max;
+            else pMap[i] = mapParams.log_min;
+        }
+    }
 
     // Q2
-    // for (int i = 0; i < mapParams.width * mapParams.height; i++) {
-    //     int counts = pMapMisses[i] + pMapHits[i];
+    for (int i = 0; i < mapParams.width * mapParams.height; i++) {
+        int counts = pMapMisses[i] + pMapHits[i];
 
-    //     if (counts == 0) pMap[i] = 50;
-    //     else {
-    //         double m = double(pMapHits[i]) / counts;
-    //         double thre = 0.5;
+        if (counts == 0) pMap[i] = 50;
+        else {
+            double m = double(pMapHits[i]) / counts;
+            double thre = 0.3;
 
-    //         if (m > thre) pMap[i] = mapParams.log_max;
-    //         else pMap[i] = mapParams.log_min;
-    //     }
-    // }
+            if (m > thre) pMap[i] = mapParams.log_max;
+            else pMap[i] = mapParams.log_min;
+        }
+    }
 
     // Q3
     for (int i = 0; i < mapParams.height; i++)
     {
-        for (int j = 0; j < mapParams.width - 1; i++)
+        for (int j = 0; j < mapParams.width - 1; j++)
         {
             GridIndex gridIndex;
             gridIndex.SetIndex(i, j);
@@ -303,7 +302,6 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
                 else pMap[neighborID] = mapParams.log_max;
             }
         }
-        
     }
     
 
