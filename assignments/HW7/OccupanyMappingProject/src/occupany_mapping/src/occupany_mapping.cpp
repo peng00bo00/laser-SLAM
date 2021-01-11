@@ -247,8 +247,6 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
                 int gridID = GridIndexToLinearIndex(gridIndex);
 
                 // sdf = laser_dist - grid_dist
-                // double grid_dist = sqrt(pow(robotIndex.x - gridIndex.x, 2) + pow(robotIndex.y - gridIndex.y, 2));
-                // grid_dist *= mapParams.resolution;
                 double grid_x = (gridIndex.x - mapParams.offset_x) * mapParams.resolution + mapParams.origin_x;
                 double grid_y = (gridIndex.y - mapParams.offset_y) * mapParams.resolution + mapParams.origin_y;
 
@@ -275,6 +273,7 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
         method = occupancy_mapping;
     }
 
+    // Q2
     if (method.compare(count) == 0) {
         std::cout << "Use count model for mapping ..." << std::endl;
         for (int i = 0; i < mapParams.width * mapParams.height; i++) {
@@ -290,6 +289,7 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
             }
         }
     }
+    // Q3
     else if (method.compare(TSDF) == 0) {
         std::cout << "Use TSDF for mapping ..." << std::endl;
         for (int i = 0; i < mapParams.height; i++)
@@ -312,6 +312,7 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
             }
         }
     }
+    // Q1
     else {
         std::cout << "Use occupancy mapping for mapping ..." << std::endl;
         for (int i = 0; i < mapParams.width * mapParams.height; i++) {
@@ -322,50 +323,6 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
             }
         }
     }
-
-    // // Q1
-    // for (int i = 0; i < mapParams.width * mapParams.height; i++) {
-    //     if (pMap[i] == 50) continue;
-    //     else {
-    //         if (pMap[i] > 50) pMap[i] = mapParams.log_max;
-    //         else pMap[i] = mapParams.log_min;
-    //     }
-    // }
-
-    // // Q2
-    // for (int i = 0; i < mapParams.width * mapParams.height; i++) {
-    //     int counts = pMapMisses[i] + pMapHits[i];
-
-    //     if (counts == 0) pMap[i] = 50;
-    //     else {
-    //         double m = double(pMapHits[i]) / counts;
-    //         double thre = 0.3;
-
-    //         if (m > thre) pMap[i] = mapParams.log_max;
-    //         else pMap[i] = mapParams.log_min;
-    //     }
-    // }
-
-    // // Q3
-    // for (int i = 0; i < mapParams.height; i++)
-    // {
-    //     for (int j = 0; j < mapParams.width - 1; j++)
-    //     {
-    //         GridIndex gridIndex;
-    //         gridIndex.SetIndex(i, j);
-
-    //         GridIndex neighbor;
-    //         neighbor.SetIndex(i, j+1);
-
-    //         int gridID = GridIndexToLinearIndex(gridIndex);
-    //         int neighborID = GridIndexToLinearIndex(neighbor);
-
-    //         if (pMapTSDF[gridID] * pMapTSDF[neighborID] <= 0) {
-    //             if (abs(pMapTSDF[gridID]) < abs(pMapTSDF[neighborID])) pMap[gridID] = mapParams.log_max;
-    //             else pMap[neighborID] = mapParams.log_max;
-    //         }
-    //     }
-    // }
     
 
     //end of TODO
