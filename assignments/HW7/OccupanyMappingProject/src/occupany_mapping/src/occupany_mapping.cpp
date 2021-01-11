@@ -243,8 +243,12 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
                 int gridID = GridIndexToLinearIndex(gridIndex);
 
                 // sdf = laser_dist - grid_dist
-                double grid_dist = sqrt(pow(robotIndex.x - gridIndex.x, 2) + pow(robotIndex.y - gridIndex.y, 2));
-                grid_dist *= mapParams.resolution;
+                // double grid_dist = sqrt(pow(robotIndex.x - gridIndex.x, 2) + pow(robotIndex.y - gridIndex.y, 2));
+                // grid_dist *= mapParams.resolution;
+                double grid_x = (gridIndex.x - mapParams.offset_x) * mapParams.resolution + mapParams.origin_x;
+                double grid_y = (gridIndex.y - mapParams.offset_y) * mapParams.resolution + mapParams.origin_y;
+
+                double grid_dist = sqrt(pow(robotPose(0) - grid_x, 2) + pow(robotPose(1) - grid_y, 2));
                 double sdf = dist - grid_dist;
 
                 // sdf -> tsdf
