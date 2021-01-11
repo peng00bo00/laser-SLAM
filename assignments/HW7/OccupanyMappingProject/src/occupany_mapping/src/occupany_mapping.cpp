@@ -6,7 +6,7 @@
 
 #define occupancy_mapping "occupancy_mapping"
 #define count "count"
-#define tsdf "tsdf"
+#define TSDF "tsdf"
 
 /**
  * Increments all the grid cells from (x0, y0) to (x1, y1);
@@ -290,7 +290,7 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
             }
         }
     }
-    else if (method.compare(tsdf) == 0) {
+    else if (method.compare(TSDF) == 0) {
         std::cout << "Use TSDF for mapping ..." << std::endl;
         for (int i = 0; i < mapParams.height; i++)
         {
