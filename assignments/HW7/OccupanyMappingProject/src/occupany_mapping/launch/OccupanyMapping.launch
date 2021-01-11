@@ -1,0 +1,5 @@
+<launch>
+   <arg name="arg_method" default="occupancy_mapping"/>
+   <param name="method" value="$(arg arg_method)"/>
+   <node name="occupancy_mapping_node" pkg="occupany_mapping"  type="occupany_mapping " output="screen" />
+</launch>

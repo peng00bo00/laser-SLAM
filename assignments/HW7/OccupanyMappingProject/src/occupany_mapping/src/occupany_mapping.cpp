@@ -4,6 +4,10 @@
 #include "sensor_msgs/PointCloud2.h"
 #include "geometry_msgs/Point32.h"
 
+#define occupancy_mapping "occupancy_mapping"
+#define count "count"
+#define tsdf "tsdf"
+
 /**
  * Increments all the grid cells from (x0, y0) to (x1, y1);
  * //不包含(x1,y1)
@@ -264,49 +268,104 @@ void OccupanyMapping(std::vector<GeneralLaserScan> &scans, std::vector<Eigen::Ve
         }
     }
     //start of TODO 通过计数建图算法或TSDF算法对栅格进行更新（2,3题内容）
-    // Q1
-    for (int i = 0; i < mapParams.width * mapParams.height; i++) {
-        if (pMap[i] == 50) continue;
-        else {
-            if (pMap[i] > 50) pMap[i] = mapParams.log_max;
-            else pMap[i] = mapParams.log_min;
-        }
+
+    std::string method;
+    if (!ros::param::get("method", method)) {
+        std::cout << "Fail to get mapping algorithm, use 'occupancy_mapping' instead." << std::endl;
+        method = occupancy_mapping;
     }
 
-    // Q2
-    for (int i = 0; i < mapParams.width * mapParams.height; i++) {
-        int counts = pMapMisses[i] + pMapHits[i];
+    if (method.compare(count) == 0) {
+        std::cout << "Use count model for mapping ..." << std::endl;
+        for (int i = 0; i < mapParams.width * mapParams.height; i++) {
+            int counts = pMapMisses[i] + pMapHits[i];
 
-        if (counts == 0) pMap[i] = 50;
-        else {
-            double m = double(pMapHits[i]) / counts;
-            double thre = 0.3;
+            if (counts == 0) pMap[i] = 50;
+            else {
+                double m = double(pMapHits[i]) / counts;
+                double thre = 0.3;
 
-            if (m > thre) pMap[i] = mapParams.log_max;
-            else pMap[i] = mapParams.log_min;
-        }
-    }
-
-    // Q3
-    for (int i = 0; i < mapParams.height; i++)
-    {
-        for (int j = 0; j < mapParams.width - 1; j++)
-        {
-            GridIndex gridIndex;
-            gridIndex.SetIndex(i, j);
-
-            GridIndex neighbor;
-            neighbor.SetIndex(i, j+1);
-
-            int gridID = GridIndexToLinearIndex(gridIndex);
-            int neighborID = GridIndexToLinearIndex(neighbor);
-
-            if (pMapTSDF[gridID] * pMapTSDF[neighborID] <= 0) {
-                if (abs(pMapTSDF[gridID]) < abs(pMapTSDF[neighborID])) pMap[gridID] = mapParams.log_max;
-                else pMap[neighborID] = mapParams.log_max;
+                if (m > thre) pMap[i] = mapParams.log_max;
+                else pMap[i] = mapParams.log_min;
             }
         }
     }
+    else if (method.compare(tsdf) == 0) {
+        std::cout << "Use TSDF for mapping ..." << std::endl;
+        for (int i = 0; i < mapParams.height; i++)
+        {
+            for (int j = 0; j < mapParams.width - 1; j++)
+            {
+                GridIndex gridIndex;
+                gridIndex.SetIndex(i, j);
+
+                GridIndex neighbor;
+                neighbor.SetIndex(i, j+1);
+
+                int gridID = GridIndexToLinearIndex(gridIndex);
+                int neighborID = GridIndexToLinearIndex(neighbor);
+
+                if (pMapTSDF[gridID] * pMapTSDF[neighborID] <= 0) {
+                    if (abs(pMapTSDF[gridID]) < abs(pMapTSDF[neighborID])) pMap[gridID] = mapParams.log_max;
+                    else pMap[neighborID] = mapParams.log_max;
+                }
+            }
+        }
+    }
+    else {
+        std::cout << "Use occupancy mapping for mapping ..." << std::endl;
+        for (int i = 0; i < mapParams.width * mapParams.height; i++) {
+            if (pMap[i] == 50) continue;
+            else {
+                if (pMap[i] > 50) pMap[i] = mapParams.log_max;
+                else pMap[i] = mapParams.log_min;
+            }
+        }
+    }
+
+    // // Q1
+    // for (int i = 0; i < mapParams.width * mapParams.height; i++) {
+    //     if (pMap[i] == 50) continue;
+    //     else {
+    //         if (pMap[i] > 50) pMap[i] = mapParams.log_max;
+    //         else pMap[i] = mapParams.log_min;
+    //     }
+    // }
+
+    // // Q2
+    // for (int i = 0; i < mapParams.width * mapParams.height; i++) {
+    //     int counts = pMapMisses[i] + pMapHits[i];
+
+    //     if (counts == 0) pMap[i] = 50;
+    //     else {
+    //         double m = double(pMapHits[i]) / counts;
+    //         double thre = 0.3;
+
+    //         if (m > thre) pMap[i] = mapParams.log_max;
+    //         else pMap[i] = mapParams.log_min;
+    //     }
+    // }
+
+    // // Q3
+    // for (int i = 0; i < mapParams.height; i++)
+    // {
+    //     for (int j = 0; j < mapParams.width - 1; j++)
+    //     {
+    //         GridIndex gridIndex;
+    //         gridIndex.SetIndex(i, j);
+
+    //         GridIndex neighbor;
+    //         neighbor.SetIndex(i, j+1);
+
+    //         int gridID = GridIndexToLinearIndex(gridIndex);
+    //         int neighborID = GridIndexToLinearIndex(neighbor);
+
+    //         if (pMapTSDF[gridID] * pMapTSDF[neighborID] <= 0) {
+    //             if (abs(pMapTSDF[gridID]) < abs(pMapTSDF[neighborID])) pMap[gridID] = mapParams.log_max;
+    //             else pMap[neighborID] = mapParams.log_max;
+    //         }
+    //     }
+    // }
     
 
     //end of TODO
