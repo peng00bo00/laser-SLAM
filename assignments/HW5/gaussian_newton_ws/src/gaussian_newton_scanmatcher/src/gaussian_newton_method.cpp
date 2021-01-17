@@ -33,10 +33,12 @@ Eigen::Vector3d GN_T2V(Eigen::Matrix3d T)
 }
 
 Eigen::Vector3d updatePoseVec(Eigen::Vector3d p, Eigen::Vector3d & dp) {
-    // Eigen::Matrix3d P = GN_V2T(dp) * GN_V2T(p);
-    // Eigen::Vector3d p_new = GN_T2V(P);
+    Eigen::Matrix3d P = GN_V2T(dp) * GN_V2T(p);
+    Eigen::Vector3d p_new = GN_T2V(P);
 
-    Eigen::Vector3d p_new = p + dp;
+    // Eigen::Vector3d p_new = p + dp;
+
+    p_new(2) = GN_NormalizationAngle(p_new(2));
 
     return p_new;
 }
@@ -200,7 +202,7 @@ void ComputeHessianAndb(map_t* map, Eigen::Vector3d now_pose,
  */
 void GaussianNewtonOptimization(map_t*map,Eigen::Vector3d& init_pose,std::vector<Eigen::Vector2d>& laser_pts)
 {
-    int maxIteration = 100;
+    int maxIteration = 30;
     Eigen::Vector3d now_pose = init_pose;
 
     Eigen::Matrix3d H;
