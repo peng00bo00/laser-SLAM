@@ -38,8 +38,6 @@ Eigen::Vector3d updatePoseVec(Eigen::Vector3d p, Eigen::Vector3d & dp) {
 
     // Eigen::Vector3d p_new = p + dp;
 
-    p_new(2) = GN_NormalizationAngle(p_new(2));
-
     return p_new;
 }
 
@@ -216,6 +214,7 @@ void GaussianNewtonOptimization(map_t*map,Eigen::Vector3d& init_pose,std::vector
         ComputeHessianAndb(map, now_pose, laser_pts, H, b);
 
         dp = H.colPivHouseholderQr().solve(b);
+        std::cout << "iteration: " << i << ", dp = " << dp.transpose() << std::endl;
 
         // now_pose += dp;
         now_pose = updatePoseVec(now_pose, dp);
