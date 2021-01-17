@@ -27,7 +27,7 @@ Eigen::Matrix3d GN_V2T(Eigen::Vector3d vec)
 Eigen::Vector3d GN_T2V(Eigen::Matrix3d T)
 {
     Eigen::Vector3d vec;
-    vec << T(0, 2), T(1, 2), atan2(T(1, 0), T(0, 0));
+    vec << T(0, 2), T(1, 2), atan2(T(1, 0), T(0, 0) + 1e-7);
 
     return vec;
 }
