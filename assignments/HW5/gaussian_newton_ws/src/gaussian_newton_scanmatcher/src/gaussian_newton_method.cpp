@@ -17,11 +17,19 @@ double GN_NormalizationAngle(double angle)
 Eigen::Matrix3d GN_V2T(Eigen::Vector3d vec)
 {
     Eigen::Matrix3d T;
-    T  << cos(vec(2)),-sin(vec(2)),vec(0),
+    T  <<   cos(vec(2)),-sin(vec(2)),vec(0),
             sin(vec(2)), cos(vec(2)),vec(1),
             0,           0,     1;
 
     return T;
+}
+
+Eigen::Vector3d GN_T2V(Eigen::Matrix3d T)
+{
+    Eigen::Vector3d vec;
+    vec << T(0, 2), T(1, 2), atan2(T(1, 0), T(0, 0));
+
+    return vec;
 }
 
 //对某一个点进行转换．
@@ -148,7 +156,6 @@ void ComputeHessianAndb(map_t* map, Eigen::Vector3d now_pose,
 
     for (Eigen::Vector2d const&pt: laser_pts) {
 
-
         // transform to current pose
         Eigen::Vector2d ST = GN_TransPoint(pt, T);
 
@@ -192,14 +199,15 @@ void GaussianNewtonOptimization(map_t*map,Eigen::Vector3d& init_pose,std::vector
 
     Eigen::Vector3d dp;
 
-    for(int i = 0; i < maxIteration;i++)
+    for(int i = 0; i < maxIteration; i++)
     {
         //TODO
         ComputeHessianAndb(map, now_pose, laser_pts, H, b);
 
         dp = H.colPivHouseholderQr().solve(b);
 
-        now_pose += dp;
+        // now_pose += dp;
+        now_pose = GN_T2V(GN_V2T(dp) * GN_V2T(now_pose));
         
         if (dp.norm() < 1e-3) break;
         //END OF TODO
