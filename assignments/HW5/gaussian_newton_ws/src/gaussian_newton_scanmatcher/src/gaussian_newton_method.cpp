@@ -27,9 +27,18 @@ Eigen::Matrix3d GN_V2T(Eigen::Vector3d vec)
 Eigen::Vector3d GN_T2V(Eigen::Matrix3d T)
 {
     Eigen::Vector3d vec;
-    vec << T(0, 2), T(1, 2), atan2(T(1, 0), T(0, 0) + 1e-7);
+    vec << T(0, 2), T(1, 2), atan2(T(1, 0), T(0, 0));
 
     return vec;
+}
+
+Eigen::Vector3d updatePoseVec(Eigen::Vector3d p, Eigen::Vector3d & dp) {
+    // Eigen::Matrix3d P = GN_V2T(dp) * GN_V2T(p);
+    // Eigen::Vector3d p_new = GN_T2V(P);
+
+    Eigen::Vector3d p_new = p + dp;
+
+    return p_new;
 }
 
 //对某一个点进行转换．
@@ -191,7 +200,7 @@ void ComputeHessianAndb(map_t* map, Eigen::Vector3d now_pose,
  */
 void GaussianNewtonOptimization(map_t*map,Eigen::Vector3d& init_pose,std::vector<Eigen::Vector2d>& laser_pts)
 {
-    int maxIteration = 1000;
+    int maxIteration = 100;
     Eigen::Vector3d now_pose = init_pose;
 
     Eigen::Matrix3d H;
@@ -207,7 +216,7 @@ void GaussianNewtonOptimization(map_t*map,Eigen::Vector3d& init_pose,std::vector
         dp = H.colPivHouseholderQr().solve(b);
 
         // now_pose += dp;
-        now_pose = GN_T2V(GN_V2T(dp) * GN_V2T(now_pose));
+        now_pose = updatePoseVec(now_pose, dp);
         
         if (dp.norm() < 1e-3) break;
         //END OF TODO

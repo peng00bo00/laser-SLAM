@@ -123,7 +123,7 @@ public:
         finalPose(2) = GN_NormalizationAngle(finalPose(2));
 
         std::cout << "Init Pose:" << finalPose.transpose() << std::endl;
-        GaussianNewtonOptimization(map,finalPose,nowPts);
+        GaussianNewtonOptimization(map, finalPose, nowPts);
 
         //更新数据．
         m_prevLaserPose = finalPose;
