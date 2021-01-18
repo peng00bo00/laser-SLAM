@@ -200,7 +200,7 @@ void ComputeHessianAndb(map_t* map, Eigen::Vector3d now_pose,
  */
 void GaussianNewtonOptimization(map_t*map,Eigen::Vector3d& init_pose,std::vector<Eigen::Vector2d>& laser_pts)
 {
-    int maxIteration = 30;
+    int maxIteration = 1000;
     Eigen::Vector3d now_pose = init_pose;
 
     Eigen::Matrix3d H;
@@ -214,9 +214,16 @@ void GaussianNewtonOptimization(map_t*map,Eigen::Vector3d& init_pose,std::vector
         ComputeHessianAndb(map, now_pose, laser_pts, H, b);
 
         dp = H.colPivHouseholderQr().solve(b);
-        std::cout << "iteration: " << i << ", dp = " << dp.transpose() << std::endl;
+        Eigen::VectorXd h(9);
+        h << H(0, 0), H(0, 1), H(0,2),
+             H(1, 0), H(1, 1), H(1,2),
+             H(2, 0), H(2, 1), H(2,2);
+        
+        std::cout << "iteration: " << i << ", dp = " << dp.transpose() << ", H = " << h.transpose() <<", b = " << b.transpose() << std::endl;
 
         // now_pose += dp;
+        // validation of dp
+        dp = dp.unaryExpr([](double v) { return std::isfinite(v)? v : 0.0; });
         now_pose = updatePoseVec(now_pose, dp);
         
         if (dp.norm() < 1e-3) break;
