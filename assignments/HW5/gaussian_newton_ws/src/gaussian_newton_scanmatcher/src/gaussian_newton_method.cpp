@@ -216,11 +216,11 @@ void GaussianNewtonOptimization(map_t*map,Eigen::Vector3d& init_pose,std::vector
 
         dp = H.colPivHouseholderQr().solve(b);
         Eigen::VectorXd h(9);
-        h << H(0, 0), H(0, 1), H(0,2),
-             H(1, 0), H(1, 1), H(1,2),
-             H(2, 0), H(2, 1), H(2,2);
+        // h << H(0, 0), H(0, 1), H(0,2),
+        //      H(1, 0), H(1, 1), H(1,2),
+        //      H(2, 0), H(2, 1), H(2,2);
         
-        std::cout << "iteration: " << i << ", dp = " << dp.transpose() << ", H = " << h.transpose() <<", b = " << b.transpose() << std::endl;
+        // std::cout << "iteration: " << i << ", dp = " << dp.transpose() << ", H = " << h.transpose() <<", b = " << b.transpose() << std::endl;
 
         // now_pose += dp;
         // validation of dp
